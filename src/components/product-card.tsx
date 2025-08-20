@@ -53,7 +53,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     router.push(`/product/${product.id}/edit`);
   };
 
-  const handleDelete = async () => {
+  // ESTA É A FUNÇÃO CORRIGIDA
+  const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     try {
       await deleteProduct(product.id);
       toast({
@@ -119,7 +123,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                    {/* ESTA É A LINHA CORRIGIDA */}
+                    <AlertDialogAction onClick={(e) => handleDelete(e)}>Continuar</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
