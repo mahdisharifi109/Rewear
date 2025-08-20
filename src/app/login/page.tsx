@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,18 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
-import { loginSchema, type LoginFormValues } from "@/lib/schemas"; // Corrigido
+import { loginSchema, type LoginFormValues } from "@/lib/schemas";
 
 export default function LoginPage() {
   const { toast } = useToast();
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/';
+
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { // Adicionado para consistência
+    defaultValues: {
       email: "",
       password: "",
     }
@@ -35,7 +38,7 @@ export default function LoginPage() {
       title: "Login (Simulação)",
       description: "Sessão iniciada com sucesso! (Simulado)",
     });
-    router.push('/');
+    router.push(redirectUrl);
   };
 
   return (

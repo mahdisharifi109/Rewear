@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/context/auth-context';
+import { UserCircle } from 'lucide-react'; // Importar ícone
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -20,10 +21,7 @@ export default function ProductDetailPage() {
   const { products } = useProducts();
   const { user } = useAuth();
   
-  // O ID da URL é uma string.
   const id = params.id as string;
-
-  // Comparamos string com string.
   const product = products.find(p => p.id === id);
 
   const isOwner = user && product && user.email === product.userEmail;
@@ -83,6 +81,13 @@ export default function ProductDetailPage() {
                 <Badge variant="secondary">{product.condition}</Badge>
             </div>
             <h1 className="text-4xl font-bold mt-4">{product.name}</h1>
+            
+            {/* Informação do Vendedor Adicionada Aqui */}
+            <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                <UserCircle className="h-4 w-4" />
+                <span>Vendido por <strong>{product.userName || 'Vendedor anónimo'}</strong></span>
+            </div>
+
             <p className="text-3xl font-bold text-primary mt-4">{product.price.toFixed(2)}€</p>
             
             <Separator className="my-6" />

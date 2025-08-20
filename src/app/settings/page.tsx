@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +15,7 @@ export default function SettingsPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const [username, setUsername] = useState(user?.name || '');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -25,6 +25,8 @@ export default function SettingsPage() {
         description: "Precisa de iniciar sessão para aceder às definições.",
       });
       router.push('/login');
+    } else if (user) {
+      setUsername(user.name || '');
     }
   }, [user, loading, router, toast]);
 
@@ -47,6 +49,7 @@ export default function SettingsPage() {
 
   const handleSaveChanges = (e: React.FormEvent) => {
     e.preventDefault();
+    // Apenas mostramos um toast, pois a autenticação é simulada
     toast({
       title: 'Alterações Guardadas (Simulação)',
       description: 'As suas informações de perfil foram atualizadas.',
@@ -65,18 +68,18 @@ export default function SettingsPage() {
             <h3 className="text-lg font-medium">Perfil</h3>
             <div className="space-y-2">
                 <Label htmlFor="username">Nome de utilizador</Label>
-                <Input id="username" defaultValue={user.name} />
+                <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
             </div>
              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue={user.email} disabled />
+                <Input id="email" type="email" defaultValue={user.email!} disabled />
             </div>
             <Button type="submit">Guardar Alterações</Button>
           </form>
 
           <Separator />
           
-           <form onSubmit={handleSaveChanges} className="space-y-4">
+           <form onSubmit={(e) => { e.preventDefault(); toast({ title: "Funcionalidade Futura", description: "A alteração de palavra-passe será implementada numa versão futura." })}} className="space-y-4">
             <h3 className="text-lg font-medium">Palavra-passe</h3>
             <div className="space-y-2">
                 <Label htmlFor="current-password">Palavra-passe Atual</Label>
@@ -97,7 +100,7 @@ export default function SettingsPage() {
                 <CardHeader>
                     <CardTitle className="text-destructive">Eliminar Conta</CardTitle>
                     <CardDescription>
-                        Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente eliminados da plataforma (de forma simulada).
+                        Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente eliminados da plataforma.
                     </CardDescription>
                 </CardHeader>
                 <CardFooter>
@@ -109,7 +112,7 @@ export default function SettingsPage() {
                             <AlertDialogHeader>
                             <AlertDialogTitle>Tem a certeza absoluta?</AlertDialogTitle>
                             <AlertDialogDescription>
-                                Esta ação não pode ser desfeita. Isto irá remover permanentemente a sua conta e os seus dados dos nossos servidores (simulados).
+                                Esta ação não pode ser desfeita. Isto irá remover permanentemente a sua conta e os seus dados dos nossos servidores.
                             </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

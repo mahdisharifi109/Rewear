@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /products/{productId} {
+      // Permite que qualquer pessoa leia, crie, edite ou apague produtos.
+      // Ideal para um ambiente de desenvolvimento e apresentação (PAP).
+      allow read, write: if true;
+    }
+  }
+}

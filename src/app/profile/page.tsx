@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo } from 'react';
@@ -9,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ProductCard } from '@/components/product-card';
+import ProductCard from '@/components/product-card'; // CORREÇÃO: Importação alterada aqui
 import { Separator } from '@/components/ui/separator';
 import { useProducts } from '@/context/product-context';
 import { Settings } from 'lucide-react';
@@ -50,8 +49,8 @@ export default function ProfilePage() {
         <Card>
             <CardHeader className="items-center text-center">
                 <Avatar className="mx-auto h-24 w-24 mb-4">
-                    <AvatarImage src={`https://api.dicebear.com/8.x/bottts-neutral/svg?seed=${user.email}`} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={`https://api.dicebear.com/8.x/bottts-neutral/svg?seed=${user.email ?? ''}`} alt={user.name ?? 'Avatar do utilizador'} />
+                    <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
                 <CardTitle className="text-3xl">{user.name}</CardTitle>
                 <CardDescription>{user.email}</CardDescription>

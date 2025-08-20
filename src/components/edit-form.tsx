@@ -15,7 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useProducts } from "@/context/product-context";
 import { useRouter } from "next/navigation";
 import { Product } from "@/lib/types";
-import { editFormSchema, type EditFormValues } from "@/lib/schemas"; // Corrigido
+import { editFormSchema, type EditFormValues } from "@/lib/schemas";
+import { useAuth } from "@/context/auth-context"; // Importar o useAuth
 
 interface EditFormProps {
   product: Product;
@@ -26,6 +27,7 @@ export function EditForm({ product }: EditFormProps) {
   const { updateProduct } = useProducts();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth(); // Obter o utilizador atual
 
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<EditFormValues>({
     resolver: zodResolver(editFormSchema),
@@ -54,9 +56,7 @@ export function EditForm({ product }: EditFormProps) {
     const files = e.target.files;
     if (files) {
         const newFiles = Array.from(files);
-        const newDataUris = await Promise.all(newFiles.map(fileToDataUri));
-
-        setValue("images", [...(watch("images") || []), ...newDataUris], { shouldValidate: true });
+        setValue("images", [...(watch("images") || []), ...newFiles], { shouldValidate: true });
     }
   };
 
@@ -66,19 +66,28 @@ export function EditForm({ product }: EditFormProps) {
     setValue("images", newImages, { shouldValidate: true });
   };
 
-  const onSubmit = (data: EditFormValues) => {
+  const onSubmit = async (data: EditFormValues) => {
     setIsSubmitting(true);
     try {
-        updateProduct({
+        const imageUrls = await Promise.all(
+            data.images.map(image => {
+                if (typeof image === 'string') return image;
+                return fileToDataUri(image);
+            })
+        );
+
+        await updateProduct({
           id: product.id,
           name: data.title,
           description: data.description,
           price: data.price,
           category: data.category as any,
           condition: data.condition as any,
-          imageUrls: data.images,
+          imageUrls: imageUrls,
           imageHint: data.title.split(" ").slice(0, 2).join(" "),
           userEmail: product.userEmail,
+          // CORREÇÃO: Usar o nome do utilizador atual como fallback se o produto não tiver um
+          userName: product.userName || user?.name || 'Vendedor Desconhecido',
         });
 
         toast({
@@ -87,6 +96,7 @@ export function EditForm({ product }: EditFormProps) {
         });
         router.push(`/product/${product.id}`);
     } catch (error) {
+        console.error("Erro ao atualizar o produto:", error);
         toast({
             variant: "destructive",
             title: "Erro ao atualizar",
@@ -118,9 +128,9 @@ export function EditForm({ product }: EditFormProps) {
 
               {imagePreviews.length > 0 && (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
-                  {imagePreviews.map((src, index) => (
-                    <div key={src + index} className="relative group aspect-square">
-                       <Image src={src} alt={`Pré-visualização ${index + 1}`} fill objectFit="cover" className="rounded-md" />
+                  {imagePreviews.map((image, index) => (
+                    <div key={index} className="relative group aspect-square">
+                       <Image src={typeof image === 'string' ? image : URL.createObjectURL(image)} alt={`Pré-visualização ${index + 1}`} fill className="rounded-md object-cover" />
                        <button type="button" onClick={() => removeImage(index)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <X className="h-4 w-4" />
                        </button>

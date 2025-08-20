@@ -1,6 +1,9 @@
-// Ficheiro: src/lib/schemas.ts
+// src/lib/schemas.ts
 
 import * as z from "zod";
+
+// Aceita strings (para imagens já existentes) ou ficheiros (para novos uploads)
+const imageSchema = z.union([z.string(), z.instanceof(File)]);
 
 // Esquema para o formulário de venda
 export const sellFormSchema = z.object({
@@ -9,10 +12,11 @@ export const sellFormSchema = z.object({
   price: z.coerce.number().min(0.01, "O preço deve ser positivo."),
   category: z.string().min(1, "Por favor, selecione uma categoria."),
   condition: z.string().min(1, "Por favor, selecione a condição do artigo."),
-  images: z.array(z.string()).min(1, "Pelo menos uma imagem é obrigatória."),
+  // O campo de imagens agora aceita um array de ficheiros ou strings
+  images: z.array(imageSchema).min(1, "Pelo menos uma imagem é obrigatória."),
 });
 
-// Esquema para o formulário de edição (é igual ao de venda, mas podemos separá-lo para futuras diferenças)
+// Esquema para o formulário de edição
 export const editFormSchema = sellFormSchema;
 
 // Esquema para o formulário de login

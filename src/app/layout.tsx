@@ -30,9 +30,10 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <AuthProvider>
-          <ProductProvider>
-            <CartProvider>
+        {/* A ordem dos Providers foi corrigida aqui. CartProvider agora envolve AuthProvider. */}
+        <CartProvider>
+          <AuthProvider>
+            <ProductProvider>
               <div className="flex min-h-screen flex-col">
                 <Header />
                 <main className="flex-1">
@@ -43,9 +44,9 @@ export default function RootLayout({
                 <Footer />
               </div>
               <Toaster />
-            </CartProvider>
-          </ProductProvider>
-        </AuthProvider>
+            </ProductProvider>
+          </AuthProvider>
+        </CartProvider>
       </body>
     </html>
   );

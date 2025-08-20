@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useProducts } from "@/context/product-context";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { sellFormSchema, type SellFormValues } from "@/lib/schemas"; // Corrigido
+import { sellFormSchema, type SellFormValues } from "@/lib/schemas";
 
 export function SellForm() {
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -31,7 +31,7 @@ export function SellForm() {
     defaultValues: {
       title: "",
       description: "",
-      price: '' as any, // Corrigido
+      price: '' as any,
       category: "",
       condition: "",
       images: [],
@@ -53,16 +53,7 @@ export function SellForm() {
     const files = e.target.files;
     if (files) {
         const newFiles = Array.from(files);
-        try {
-            const newDataUris = await Promise.all(newFiles.map(fileToDataUri));
-            setValue("images", [...(watch("images") || []), ...newDataUris], { shouldValidate: true });
-        } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "Erro ao carregar imagem",
-                description: "Não foi possível processar uma das imagens."
-            })
-        }
+        setValue("images", [...(watch("images") || []), ...newFiles], { shouldValidate: true });
     }
   };
   
@@ -83,9 +74,15 @@ export function SellForm() {
       return;
     }
     
+    const firstImage = images[0];
+    if (!(firstImage instanceof File)) {
+        toast({ variant: "destructive", title: "Erro", description: "A sugestão de IA só funciona com novas imagens." });
+        return;
+    }
+
     setIsSuggesting(true);
     try {
-      const base64data = images[0];
+      const base64data = await fileToDataUri(firstImage);
       const result = await suggestProductDetails({ photoDataUri: base64data });
       setValue("title", result.suggestedTitle, { shouldValidate: true });
       setValue("description", result.suggestedDescription, { shouldValidate: true });
@@ -107,8 +104,8 @@ export function SellForm() {
     }
   };
 
-  const onSubmit = (data: SellFormValues) => {
-    if (!user) {
+  const onSubmit = async (data: SellFormValues) => {
+    if (!user || !user.name || !user.email) {
         toast({
             variant: "destructive",
             title: "Erro de Autenticação",
@@ -118,15 +115,23 @@ export function SellForm() {
     }
     setIsSubmitting(true);
     try {
-        addProduct({
+        const imageUrls = await Promise.all(
+            data.images.map(image => {
+                if (typeof image === 'string') return image;
+                return fileToDataUri(image);
+            })
+        );
+
+        await addProduct({
           name: data.title,
           description: data.description,
           price: data.price,
           category: data.category as any,
           condition: data.condition as any,
-          imageUrls: data.images,
+          imageUrls: imageUrls,
           imageHint: data.title.split(" ").slice(0, 2).join(" "),
           userEmail: user.email,
+          userName: user.name, // Adicionado o nome do vendedor aqui
         });
 
         toast({
@@ -151,7 +156,7 @@ export function SellForm() {
     <Card>
       <CardHeader>
         <CardTitle>Venda o seu artigo</CardTitle>
-        <CardDescription>Preencha os detalhes abaixo. Carregue uma ou mais imagens e use a IA para obter ajuda!</CardDescription>
+        <CardDescription>Preencha os detalhes abaixo e carregue uma ou mais imagens.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-8">
@@ -168,9 +173,9 @@ export function SellForm() {
 
               {imagePreviews.length > 0 && (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
-                  {imagePreviews.map((src, index) => (
+                  {imagePreviews.map((image, index) => (
                     <div key={index} className="relative group aspect-square">
-                       <Image src={src} alt={`Pré-visualização ${index + 1}`} fill objectFit="cover" className="rounded-md" />
+                       <Image src={typeof image === 'string' ? image : URL.createObjectURL(image)} alt={`Pré-visualização ${index + 1}`} fill className="rounded-md object-cover" />
                        <button type="button" onClick={() => removeImage(index)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <X className="h-4 w-4" />
                        </button>
@@ -180,10 +185,6 @@ export function SellForm() {
               )}
               {errors.images && <p className="text-sm text-destructive">{errors.images.message?.toString()}</p>}
             </div>
-            <Button type="button" onClick={handleSuggestion} disabled={isSuggesting || imagePreviews.length === 0} className="w-full">
-              {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              Gerar Sugestões com IA (baseado na 1ª imagem)
-            </Button>
           </div>
           <div className="space-y-4">
              <div className="space-y-2">

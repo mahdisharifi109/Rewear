@@ -3,8 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import type { Product } from "@/lib/types";
-import { ProductCard } from "@/components/product-card";
+import ProductCard from "@/components/product-card"; // Importação corrigida
 import { useProducts } from "@/context/product-context";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag } from "lucide-react";

@@ -10,16 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
-import { registerSchema, type RegisterFormValues } from "@/lib/schemas"; // Corrigido
+import { registerSchema, type RegisterFormValues } from "@/lib/schemas";
 
 export default function RegisterPage() {
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login } = useAuth(); // Usamos o login simulado
   const router = useRouter();
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { // Adicionado para consistência
+    defaultValues: {
       username: "",
       email: "",
       password: "",

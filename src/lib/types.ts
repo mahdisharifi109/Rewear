@@ -1,7 +1,8 @@
+// src/lib/types.ts
 import { Timestamp } from "firebase/firestore";
 
 export type Product = {
-  id: string; // Corrigido de number para string
+  id: string;
   name: string;
   description: string;
   price: number;
@@ -10,7 +11,8 @@ export type Product = {
   imageUrls: string[];
   imageHint: string;
   userEmail: string;
-  createdAt?: Timestamp; // Adicionado para ordenação
+  userName: string; // Adicionado nome do vendedor
+  createdAt?: Timestamp;
 };
 
 export type CartItem = {

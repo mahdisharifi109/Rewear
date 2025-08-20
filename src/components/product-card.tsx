@@ -10,16 +10,29 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/cart-context";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/auth-context";
-import { ShoppingCart, Pencil } from "lucide-react";
+import { useProducts } from "@/context/product-context";
+import { ShoppingCart, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface ProductCardProps {
   product: Product;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { deleteProduct } = useProducts();
   const router = useRouter();
 
   const isOwner = user && user.email === product.userEmail;
@@ -38,6 +51,23 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     router.push(`/product/${product.id}/edit`);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteProduct(product.id);
+      toast({
+        title: "Produto Removido",
+        description: "O seu produto foi removido com sucesso.",
+      });
+    } catch (error: any) {
+      console.error("Falha ao apagar o produto:", error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao apagar",
+        description: `Não foi possível remover o produto. Detalhe: ${error.message}`,
+      });
+    }
   };
 
   return (
@@ -68,10 +98,32 @@ export function ProductCard({ product }: ProductCardProps) {
         </CardContent>
         <CardFooter className="p-4 pt-0 mt-auto">
           {isOwner ? (
-            <Button variant="outline" className="w-full" onClick={handleEdit}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Editar Produto
-            </Button>
+            <div className="w-full flex gap-2">
+              <Button variant="outline" className="w-full" onClick={handleEdit}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Editar
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Apagar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Tem a certeza?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. O seu produto será apagado permanentemente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           ) : (
             <Button className="w-full" onClick={handleAddToCart} disabled={Boolean(!user || isOwner)}>
               <ShoppingCart className="mr-2 h-4 w-4" />
@@ -83,3 +135,5 @@ export function ProductCard({ product }: ProductCardProps) {
     </Link>
   );
 }
+
+export default ProductCard;
