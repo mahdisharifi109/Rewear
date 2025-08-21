@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation"; // Usar o useRouter para navegação
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,9 +22,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import Link from "next/link";
+} from "@/components/ui/alert-dialog";
+import React from "react"; // Importar React
 
+// Definir as propriedades que o componente espera receber
 interface ProductCardProps {
   product: Product;
 }
@@ -37,18 +39,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const isOwner = user && user.uid === product.userId;
 
-  const handleCardClick = () => {
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Evitar navegação se o clique for num botão dentro do CardFooter
+    if ((e.target as HTMLElement).closest('.card-actions-footer')) {
+      return;
+    }
     router.push(`/product/${product.id}`);
   };
 
   const handleActionClick = (e: React.MouseEvent) => {
-    // Esta é a linha mais importante. Impede que o clique no botão
-    // ative o clique no cartão.
     e.stopPropagation();
   };
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
-    handleActionClick(e); // Primeiro, para a propagação
+    handleActionClick(e);
     addToCart({ product, quantity: 1 });
     toast({
       title: "Adicionado ao carrinho",
@@ -57,12 +61,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   const handleEdit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    handleActionClick(e); // Para a propagação
+    handleActionClick(e);
     router.push(`/product/${product.id}/edit`);
   };
 
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    handleActionClick(e); // Para a propagação
+    handleActionClick(e);
     try {
       await deleteProduct(product.id);
       toast({
@@ -79,43 +83,44 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   return (
-    // O Card agora é o elemento principal que gere a navegação
-    <Card 
+    <Card
       onClick={handleCardClick}
       className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg h-full cursor-pointer group"
     >
-      <CardHeader className="p-0 border-b">
-        <div className="relative aspect-[4/3] w-full overflow-hidden">
-          <Image
-            src={product.imageUrls[0]}
-            alt={product.name}
-            data-ai-hint={product.imageHint}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1 p-4 flex flex-col">
-        <div className="flex-1">
+      {/* O conteúdo clicável leva para a página do produto */}
+      <div className="flex-grow">
+        <CardHeader className="p-0 border-b">
+          <div className="relative aspect-[4/3] w-full overflow-hidden">
+            <Image
+              src={product.imageUrls[0]}
+              alt={product.name}
+              data-ai-hint={product.imageHint}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">
           <div className="flex items-start justify-between gap-2">
-              <CardTitle className="text-lg font-semibold leading-tight group-hover:text-primary">{product.name}</CardTitle>
-              <div className="text-lg font-bold text-primary whitespace-nowrap">{product.price.toFixed(2)}€</div>
+            <CardTitle className="text-lg font-semibold leading-tight group-hover:text-primary">{product.name}</CardTitle>
+            <div className="text-lg font-bold text-primary whitespace-nowrap">{product.price.toFixed(2)}€</div>
           </div>
           <div className="mt-2 flex items-center gap-2 flex-wrap">
-              <Badge variant="outline">{product.condition}</Badge>
-              <Badge variant="secondary">{product.category}</Badge>
+            <Badge variant="outline">{product.condition}</Badge>
+            <Badge variant="secondary">{product.category}</Badge>
           </div>
-        </div>
-      </CardContent>
+        </CardContent>
+      </div>
       
-      <CardFooter className="p-4 pt-0 mt-auto">
+      {/* O rodapé com os botões não é clicável para navegação */}
+      <CardFooter className="p-4 pt-0 mt-auto card-actions-footer">
         {isOwner ? (
           <div className="w-full flex gap-2">
             <Button variant="outline" className="w-full" onClick={handleEdit}>
               <Pencil className="mr-2 h-4 w-4" />
               Editar
             </Button>
-            <AlertDialog onOpenChange={(open) => { if(open) { /* Previne o clique de borbulhar quando o diálogo abre */ } }}>
+            <AlertDialog onOpenChange={(open) => open && handleActionClick}>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" className="w-full" onClick={handleActionClick}>
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -139,12 +144,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         ) : (
           <Button className="w-full" onClick={handleAddToCart} disabled={!user}>
             <ShoppingCart className="mr-2 h-4 w-4" />
-            { !user ? "Faça login para comprar" : "Adicionar ao Carrinho" }
+            {!user ? "Faça login para comprar" : "Adicionar ao Carrinho"}
           </Button>
         )}
       </CardFooter>
     </Card>
   );
-}
+};
 
 export default ProductCard;

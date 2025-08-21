@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -25,14 +25,16 @@ export default function ProductDetailPage() {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const { products } = useProducts();
-  const { user } = useAuth();
+  const { user, toggleFavorite } = useAuth(); // Obter a nova função
   
   const id = params.id as string;
   const product = useMemo(() => products.find(p => p.id === id), [products, id]);
+  
+  // O estado agora vem diretamente do 'user'
+  const isFavorited = useMemo(() => user?.favorites?.includes(product?.id || '') || false, [user, product]);
 
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
   const [quantity, setQuantity] = useState(1);
-  const [isFavorited, setIsFavorited] = useState(false);
 
   if (!product) {
     return (
@@ -58,6 +60,14 @@ export default function ProductDetailPage() {
 
   const handleEdit = () => {
     router.push(`/product/${product.id}/edit`);
+  };
+
+  const handleFavoriteClick = () => {
+    if (!user) {
+        toast({ variant: "destructive", title: "Acesso Negado", description: "Precisa de fazer login para guardar favoritos." });
+        return;
+    }
+    toggleFavorite(product.id);
   };
   
   const detailItems = [
@@ -95,7 +105,6 @@ export default function ProductDetailPage() {
                             <Link href={`/seller/${product.userId}`} className="inline-block">
                                 <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground hover:text-primary transition-colors">
                                     <Avatar className="h-6 w-6">
-                                        {/* AVATAR ATUALIZADO PARA O ESTILO "INICIAIS" */}
                                         <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${product.userName ?? 'V'}`} />
                                         <AvatarFallback>{product.userName ? product.userName.charAt(0) : 'V'}</AvatarFallback>
                                     </Avatar>
@@ -163,10 +172,12 @@ export default function ProductDetailPage() {
                         {product.quantity < 1 ? "Esgotado" : (isAddToCartDisabled ? "Selecione as opções" : "Adicionar ao Carrinho")}
                     </Button>
                 )}
-                <Button size="lg" variant="secondary" className="w-full">Contactar Vendedor</Button>
-                <Button size="lg" variant="ghost" className="w-full" onClick={() => setIsFavorited(!isFavorited)}>
+                <Button size="lg" variant="secondary" className="w-full" asChild>
+                  <a href={`mailto:${product.userEmail}?subject=Interesse no artigo: ${product.name}`}>Contactar Vendedor</a>
+                </Button>
+                <Button size="lg" variant="ghost" className="w-full" onClick={handleFavoriteClick}>
                     <Heart className={cn("mr-2 h-5 w-5", isFavorited && "fill-red-500 text-red-500")} />
-                    {isFavorited ? "Guardado" : "Guardar nos Favoritos"}
+                    {isFavorited ? "Guardado nos Favoritos" : "Guardar nos Favoritos"}
                 </Button>
             </div>
         </div>

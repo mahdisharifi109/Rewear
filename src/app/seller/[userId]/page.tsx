@@ -74,7 +74,6 @@ export default function SellerProfilePage() {
         <div className="container mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center text-center mb-12">
                 <Avatar className="h-24 w-24 mb-4">
-                    {/* AVATAR ATUALIZADO PARA O ESTILO "INICIAIS" */}
                     <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${seller.username}`} alt={seller.username ?? 'Avatar do Vendedor'} />
                     <AvatarFallback>{seller.username ? seller.username.charAt(0).toUpperCase() : 'V'}</AvatarFallback>
                 </Avatar>

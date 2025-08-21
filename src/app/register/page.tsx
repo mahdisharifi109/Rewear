@@ -29,12 +29,17 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
+      // 1. Criar o utilizador no Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
+      // 2. Criar um documento para o utilizador no Firestore
+      // A CORREÇÃO ESTÁ AQUI: Adicionamos os campos em falta
       await setDoc(doc(db, "users", user.uid), {
         username: data.username,
         email: data.email,
+        avatarStyle: "initials", // Definir 'initials' como padrão
+        favorites: [], 
       });
 
       toast({
@@ -45,7 +50,6 @@ export default function RegisterPage() {
 
     } catch (error: any) {
       console.error("Erro no registo:", error);
-      // Lógica de erro melhorada
       let description = "Ocorreu um erro. Por favor, tente novamente.";
       if (error.code === 'auth/email-already-in-use') {
         description = "Este email já está a ser utilizado por outra conta.";

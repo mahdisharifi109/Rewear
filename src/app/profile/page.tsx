@@ -12,6 +12,7 @@ import ProductCard from '@/components/product-card';
 import { Separator } from '@/components/ui/separator';
 import { useProducts } from '@/context/product-context';
 import { Settings, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 export default function ProfilePage() {
@@ -36,6 +37,11 @@ export default function ProfilePage() {
     return products.filter(p => p.userId === user.uid);
   }, [products, user]);
 
+  const favoriteProducts = useMemo(() => {
+      if (!user || !user.favorites) return [];
+      return products.filter(p => user.favorites.includes(p.id));
+  }, [products, user]);
+
   if (loading || productsLoading || !user) {
     return (
         <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8 text-center">
@@ -50,7 +56,6 @@ export default function ProfilePage() {
         <Card>
             <CardHeader className="items-center text-center">
                 <Avatar className="mx-auto h-24 w-24 mb-4">
-                    {/* AVATAR ATUALIZADO PARA O ESTILO "INICIAIS" */}
                     <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${user.name ?? 'V'}`} alt={user.name ?? 'Avatar do utilizador'} />
                     <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
@@ -70,22 +75,38 @@ export default function ProfilePage() {
             </CardFooter>
             <CardContent className="mt-6">
                 <Separator />
-                <div className="mt-8">
-                    <h3 className="text-2xl font-semibold mb-6 text-center">
-                        Os seus {userProducts.length} artigos à venda
-                    </h3>
-                    {userProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {userProducts.map(product => (
-                                <ProductCard key={product.id} product={product} />
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-muted-foreground text-center py-8">
-                            Ainda não tem artigos à venda.
-                        </p>
-                    )}
-                </div>
+                <Tabs defaultValue="selling" className="mt-8">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="selling">À Venda ({userProducts.length})</TabsTrigger>
+                        <TabsTrigger value="favorites">Favoritos ({favoriteProducts.length})</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="selling" className="mt-6">
+                        {userProducts.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {userProducts.map(product => (
+                                    <ProductCard key={product.id} product={product} />
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-muted-foreground text-center py-8">
+                                Ainda não tem artigos à venda.
+                            </p>
+                        )}
+                    </TabsContent>
+                    <TabsContent value="favorites" className="mt-6">
+                         {favoriteProducts.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {favoriteProducts.map(product => (
+                                    <ProductCard key={product.id} product={product} />
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-muted-foreground text-center py-8">
+                                Ainda não guardou nenhum artigo nos favoritos.
+                            </p>
+                        )}
+                    </TabsContent>
+                </Tabs>
             </CardContent>
         </Card>
     </div>
