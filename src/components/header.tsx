@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useEffect } from "react"; // Adicionado useEffect
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Package2, ShoppingCart, ChevronDown, User, Menu } from "lucide-react";
@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { SearchBar } from "./search-bar"; 
 import { Skeleton } from "./ui/skeleton";
+import { SideCart } from "./side-cart";
 
 const categories = ["Roupa", "Calçado", "Livros", "Eletrónica", "Outro"];
 
@@ -35,6 +36,15 @@ export function Header() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // --- INÍCIO DA CORREÇÃO ---
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  // --- FIM DA CORREÇÃO ---
 
   const handleLogout = () => {
     logout();
@@ -101,7 +111,12 @@ export function Header() {
           </Suspense>
         
           <div className="hidden md:flex items-center gap-2">
-            {user ? (
+            {/* --- INÍCIO DA CORREÇÃO --- */}
+            {/* Só mostramos os botões depois de o componente estar "montado" no navegador */}
+            {!isMounted ? (
+              <Skeleton className="h-10 w-24" />
+            ) : user ? (
+            // --- FIM DA CORREÇÃO --- */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost">
@@ -132,20 +147,17 @@ export function Header() {
             </Button>
           </div>
 
-          <Button variant="ghost" size="icon" className="relative" asChild>
-            <Link href="/cart">
-              <ShoppingCart className="h-5 w-5" />
-              {cartCount > 0 && (
-                <Badge
-                  variant="default"
-                  className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-1 text-xs"
-                >
-                  {cartCount}
-                </Badge>
-              )}
-              <span className="sr-only">Abrir carrinho</span>
-            </Link>
+          <Button variant="ghost" size="icon" className="relative" onClick={() => setIsCartOpen(true)}>
+            <ShoppingCart className="h-5 w-5" />
+            {cartCount > 0 && (
+              <Badge variant="default" className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-1 text-xs">
+                {cartCount}
+              </Badge>
+            )}
+            <span className="sr-only">Abrir carrinho</span>
           </Button>
+
+          {isMounted && <SideCart open={isCartOpen} onOpenChange={setIsCartOpen} />}
 
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -156,7 +168,9 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                  <nav className="flex flex-col gap-4 mt-8">
-                    {user ? (
+                    {/* --- INÍCIO DA CORREÇÃO --- */}
+                    {!isMounted ? <Skeleton className="h-8 w-32" /> : user ? (
+                    // --- FIM DA CORREÇÃO --- */}
                         <>
                             <div className="flex items-center gap-2 border-b pb-4">
                                 <User className="h-6 w-6" />
@@ -177,7 +191,7 @@ export function Header() {
                     <MobileNavLink href="/faq">FAQ</MobileNavLink>
                     <MobileNavLink href="/contact">Contacto</MobileNavLink>
                     <Separator />
-                    {user && (
+                    {isMounted && user && (
                          <Button variant="ghost" onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}>Terminar Sessão</Button>
                     )}
                  </nav>

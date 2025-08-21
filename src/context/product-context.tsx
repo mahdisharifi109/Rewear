@@ -5,7 +5,6 @@ import React, { createContext, useContext, useState, ReactNode, useMemo, useCall
 import { collection, onSnapshot, addDoc, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-// CORREÇÃO: Definir NewProduct para incluir os novos campos opcionais do tipo Product
 type NewProduct = Omit<Product, 'id' | 'createdAt'>;
 
 interface ProductContextType {
@@ -23,7 +22,6 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     const productsCollection = collection(db, 'products');
     const q = query(productsCollection, orderBy("createdAt", "desc"));
 
@@ -32,11 +30,10 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         id: doc.id,
         ...doc.data()
       })) as Product[];
-      
       setProducts(productsData);
       setLoading(false);
     }, (error) => {
-      console.error("Erro ao carregar produtos do Firestore:", error);
+      console.error("Erro ao carregar produtos:", error);
       setLoading(false);
     });
 
@@ -44,6 +41,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addProduct = useCallback(async (product: NewProduct) => {
+    console.log("5. A função addProduct do contexto foi chamada com:", product);
     try {
       const productsCollection = collection(db, 'products');
       await addDoc(productsCollection, {
@@ -51,7 +49,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         createdAt: serverTimestamp()
       });
     } catch (error) {
-      console.error("Erro ao adicionar produto:", error);
+      console.error("ERRO ao tentar adicionar o documento ao Firestore:", error);
       throw error;
     }
   }, []);

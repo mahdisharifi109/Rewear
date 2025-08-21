@@ -18,10 +18,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-const colorMap: { [key: string]: string } = {
-  "Preto": "bg-black", "Branco": "bg-white border", "Vermelho": "bg-red-500", "Verde": "bg-green-500", "Azul": "bg-blue-500",
-};
-
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -34,7 +30,6 @@ export default function ProductDetailPage() {
   const product = useMemo(() => products.find(p => p.id === id), [products, id]);
 
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
-  const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [quantity, setQuantity] = useState(1);
   const [isFavorited, setIsFavorited] = useState(false);
 
@@ -49,12 +44,11 @@ export default function ProductDetailPage() {
 
   const isOwner = user && product && user.email === product.userEmail;
   const hasSizes = product.sizes && product.sizes.length > 0;
-  const hasColors = product.colors && product.colors.length > 0;
-  const isAddToCartDisabled = (hasSizes && !selectedSize) || (hasColors && !selectedColor) || !!isOwner;
+  const isAddToCartDisabled = (hasSizes && !selectedSize) || isOwner || product.quantity < 1;
 
   const handleAddToCart = () => {
     if (isAddToCartDisabled) return;
-    addToCart({ product, quantity, size: selectedSize, color: selectedColor });
+    addToCart({ product, quantity, size: selectedSize });
     toast({
       title: "Adicionado ao carrinho",
       description: `${quantity} x ${product.name} foi adicionado.`,
@@ -106,12 +100,7 @@ export default function ProductDetailPage() {
                             </div>
                         </div>
                         <div className="text-right">
-                           <div className="flex items-baseline gap-2">
-                               {product.originalPrice && product.originalPrice > product.price && (
-                                   <p className="text-lg text-muted-foreground line-through">{product.originalPrice.toFixed(2)}€</p>
-                               )}
-                               <p className="text-2xl font-bold text-primary">{product.price.toFixed(2)}€</p>
-                           </div>
+                           <p className="text-2xl font-bold text-primary">{product.price.toFixed(2)}€</p>
                            <p className="text-xs text-muted-foreground mt-1">Proteção ao Comprador incluída</p>
                         </div>
                     </div>
@@ -147,27 +136,18 @@ export default function ProductDetailPage() {
                             </RadioGroup>
                         </div>
                     )}
-                    {hasColors && (
-                        <div>
-                            <Label className="text-base font-medium">Cor</Label>
-                            <RadioGroup value={selectedColor} onValueChange={setSelectedColor} className="flex flex-wrap gap-3 mt-2">
-                              {product.colors!.map(color => (
-                                <div key={color}>
-                                  <RadioGroupItem value={color} id={`color-${color}`} className="sr-only" />
-                                  <Label htmlFor={`color-${color}`} className={cn("h-8 w-8 rounded-full border-2 cursor-pointer ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", selectedColor === color ? "ring-2 ring-primary" : "border-muted")}><span className={cn("h-full w-full rounded-full block", colorMap[color] || 'bg-gray-200')} /></Label>
-                                </div>
-                              ))}
-                            </RadioGroup>
-                        </div>
+                    
+                    {product.quantity > 1 && (
+                      <div>
+                         <Label className="text-base font-medium">Quantidade</Label>
+                         <div className="flex items-center gap-2 mt-2">
+                              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setQuantity(q => Math.max(1, q - 1))}><Minus className="h-4 w-4" /></Button>
+                              <span className="w-12 text-center text-lg font-medium">{quantity}</span>
+                              <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setQuantity(q => Math.min(product.quantity, q + 1))}><Plus className="h-4 w-4" /></Button>
+                         </div>
+                         <p className="text-xs text-muted-foreground mt-1">{product.quantity} disponíveis</p>
+                      </div>
                     )}
-                    <div>
-                       <Label className="text-base font-medium">Quantidade</Label>
-                       <div className="flex items-center gap-2 mt-2">
-                            <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setQuantity(q => Math.max(1, q - 1))}><Minus className="h-4 w-4" /></Button>
-                            <span className="w-12 text-center text-lg font-medium">{quantity}</span>
-                            <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setQuantity(q => q + 1)}><Plus className="h-4 w-4" /></Button>
-                       </div>
-                    </div>
                 </CardContent>
             </Card>
 
@@ -176,7 +156,7 @@ export default function ProductDetailPage() {
                     <Button size="lg" className="w-full" onClick={handleEdit}>Editar Anúncio</Button>
                 ) : (
                     <Button size="lg" className="w-full" onClick={handleAddToCart} disabled={isAddToCartDisabled}>
-                        {isAddToCartDisabled ? "Selecione as opções" : "Adicionar ao Carrinho"}
+                        {product.quantity < 1 ? "Esgotado" : (isAddToCartDisabled ? "Selecione as opções" : "Adicionar ao Carrinho")}
                     </Button>
                 )}
                 <Button size="lg" variant="secondary" className="w-full">Contactar Vendedor</Button>

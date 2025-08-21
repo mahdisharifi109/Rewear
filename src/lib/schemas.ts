@@ -10,10 +10,13 @@ export const sellFormSchema = z.object({
   condition: z.string().min(1, "Por favor, selecione a condição do artigo."),
   images: z.array(imageSchema).min(1, "Pelo menos uma imagem é obrigatória."),
   
-  // CAMPOS CORRIGIDOS
-  originalPrice: z.coerce.number().optional().nullable(),
+  // Campo Quantidade adicionado e obrigatório
+  quantity: z.coerce.number().min(1, "A quantidade deve ser pelo menos 1."),
+
+  // Campos opcionais
   brand: z.string().optional(),
   material: z.string().optional(),
+  sizes: z.string().optional(),
 });
 
 export const editFormSchema = sellFormSchema;
@@ -33,7 +36,21 @@ export const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
+// Esquema para o novo formulário de checkout
+export const checkoutSchema = z.object({
+    email: z.string().email("Email inválido."),
+    firstName: z.string().min(1, "O nome é obrigatório."),
+    lastName: z.string().min(1, "O apelido é obrigatório."),
+    phone: z.string().optional(),
+    country: z.string().min(1, "O país é obrigatório."),
+    address: z.string().min(1, "A morada é obrigatória."),
+    city: z.string().min(1, "A cidade é obrigatória."),
+    region: z.string().min(1, "A região é obrigatória."),
+    postalCode: z.string().min(1, "O código postal é obrigatório."),
+});
+
 export type SellFormValues = z.infer<typeof sellFormSchema>;
 export type EditFormValues = z.infer<typeof editFormSchema>;
 export type LoginFormValues = z.infer<typeof loginSchema>;
 export type RegisterFormValues = z.infer<typeof registerSchema>;
+export type CheckoutFormValues = z.infer<typeof checkoutSchema>;

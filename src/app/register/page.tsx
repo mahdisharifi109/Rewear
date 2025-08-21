@@ -9,37 +9,55 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/auth-context";
 import { registerSchema, type RegisterFormValues } from "@/lib/schemas";
+import { auth, db } from "@/lib/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+
 
 export default function RegisterPage() {
   const { toast } = useToast();
-  const { login } = useAuth(); // Usamos o login simulado
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    }
   });
 
-  const onSubmit = (data: RegisterFormValues) => {
-    // Simulação de criação de conta e login
-    const user = {
-        name: data.username,
-        email: data.email
-    };
-    login(user);
+  const onSubmit = async (data: RegisterFormValues) => {
+    setIsLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
 
-    toast({
-      title: "Registo (Simulação)",
-      description: "Conta criada com sucesso! (Simulado)",
-    });
-    router.push('/');
+      await setDoc(doc(db, "users", user.uid), {
+        username: data.username,
+        email: data.email,
+      });
+
+      toast({
+        title: "Conta Criada!",
+        description: "Bem-vindo à SecondWave!",
+      });
+      router.push('/');
+
+    } catch (error: any) {
+      console.error("Erro no registo:", error);
+      // Lógica de erro melhorada
+      let description = "Ocorreu um erro. Por favor, tente novamente.";
+      if (error.code === 'auth/email-already-in-use') {
+        description = "Este email já está a ser utilizado por outra conta.";
+      }
+      toast({
+        variant: "destructive",
+        title: "Erro no Registo",
+        description: description,
+      });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -71,7 +89,8 @@ export default function RegisterPage() {
               <Input id="confirmPassword" type="password" placeholder="••••••••" {...register("confirmPassword")} />
               {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Criar Conta
             </Button>
           </form>

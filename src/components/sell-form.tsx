@@ -21,7 +21,7 @@ export function SellForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { addProduct } = useProducts();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth(); // Obter o estado de loading
   const router = useRouter();
 
   const { control, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm<SellFormValues>({
@@ -30,11 +30,12 @@ export function SellForm() {
       title: "",
       description: "",
       price: undefined,
-      originalPrice: undefined,
+      quantity: 1,
       category: "",
       condition: "",
       brand: "",
       material: "",
+      sizes: "",
       images: [],
     },
   });
@@ -65,8 +66,8 @@ export function SellForm() {
   };
 
   const onSubmit = async (data: SellFormValues) => {
-    if (!user || !user.name || !user.email) {
-        toast({ variant: "destructive", title: "Erro de Autenticação", description: "Precisa de estar autenticado para publicar um anúncio." });
+    if (authLoading || !user) {
+        toast({ variant: "destructive", title: "Erro de Autenticação", description: "Por favor, aguarde ou faça login novamente." });
         return;
     }
     setIsSubmitting(true);
@@ -77,40 +78,61 @@ export function SellForm() {
                 return fileToDataUri(image as File);
             })
         );
+        
+        const sizesArray = data.sizes ? data.sizes.split(',').map(s => s.trim().toUpperCase()) : [];
 
         await addProduct({
           name: data.title,
           description: data.description,
           price: data.price,
-          originalPrice: data.originalPrice || undefined,
+          quantity: data.quantity,
           category: data.category as any,
           condition: data.condition as any,
           brand: data.brand,
           material: data.material,
+          sizes: sizesArray,
           imageUrls: imageUrls,
           imageHint: data.title.split(" ").slice(0, 2).join(" "),
-          userEmail: user.email,
+          userEmail: user.email!,
           userName: user.name,
+          userId: user.uid,
         });
 
         toast({ title: "Anúncio Publicado!", description: "O seu produto foi listado com sucesso!" });
         reset();
         router.push('/');
     } catch (error) {
-        toast({ variant: "destructive", title: "Erro ao Publicar", description: "Não foi possível publicar o seu anúncio. Tente novamente." })
+        console.error("Erro ao publicar o produto:", error)
+        toast({ variant: "destructive", title: "Erro ao Publicar", description: "Ocorreu um erro. Verifique as permissões da base de dados e tente novamente." })
     } finally {
         setIsSubmitting(false);
     }
   };
 
+  if (authLoading) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Venda o seu artigo</CardTitle>
+                <CardDescription>A verificar a sua sessão...</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center justify-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            </CardContent>
+        </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Venda o seu artigo</CardTitle>
-        <CardDescription>Preencha os detalhes abaixo e carregue uma ou mais imagens.</CardDescription>
+        <CardDescription>Preencha os detalhes abaixo. Campos com * são opcionais.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="image-upload">Imagens do Produto</Label>
                <div className="relative flex justify-center items-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors">
@@ -153,65 +175,62 @@ export function SellForm() {
                         {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="originalPrice">Preço Original (Opcional)</Label>
-                        <Controller name="originalPrice" control={control} render={({ field }) => <Input id="originalPrice" type="number" step="0.01" placeholder="50.00" {...field} value={field.value ?? ''} />} />
-                        {errors.originalPrice && <p className="text-sm text-destructive">{errors.originalPrice.message}</p>}
+                        <Label htmlFor="quantity">Quantidade</Label>
+                        <Controller name="quantity" control={control} render={({ field }) => <Input id="quantity" type="number" step="1" placeholder="1" {...field} />} />
+                        {errors.quantity && <p className="text-sm text-destructive">{errors.quantity.message}</p>}
                     </div>
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="brand">Marca (Opcional)</Label>
-                        <Controller name="brand" control={control} render={({ field }) => <Input id="brand" placeholder="Ex: Zara" {...field} />} />
+                        <Label htmlFor="brand">Marca*</Label>
+                        <Controller name="brand" control={control} render={({ field }) => <Input id="brand" placeholder="Ex: Zara" {...field} value={field.value ?? ''} />} />
                         {errors.brand && <p className="text-sm text-destructive">{errors.brand.message}</p>}
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="material">Material (Opcional)</Label>
-                        <Controller name="material" control={control} render={({ field }) => <Input id="material" placeholder="Ex: Algodão" {...field} />} />
+                        <Label htmlFor="material">Material*</Label>
+                        <Controller name="material" control={control} render={({ field }) => <Input id="material" placeholder="Ex: Algodão" {...field} value={field.value ?? ''} />} />
                         {errors.material && <p className="text-sm text-destructive">{errors.material.message}</p>}
                     </div>
+                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="sizes">Tamanhos* (separados por vírgula)</Label>
+                    <Controller name="sizes" control={control} render={({ field }) => <Input id="sizes" placeholder="S, M, L, XL" {...field} value={field.value ?? ''} />} />
+                    {errors.sizes && <p className="text-sm text-destructive">{errors.sizes.message}</p>}
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="category">Categoria</Label>
-                         <Controller
-                            name="category"
-                            control={control}
-                            render={({ field }) => (
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <SelectTrigger><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Roupa">Roupa</SelectItem>
-                                        <SelectItem value="Calçado">Calçado</SelectItem>
-                                        <SelectItem value="Livros">Livros</SelectItem>
-                                        <SelectItem value="Eletrónica">Eletrónica</SelectItem>
-                                        <SelectItem value="Outro">Outro</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
+                         <Controller name="category" control={control} render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Roupa">Roupa</SelectItem>
+                                    <SelectItem value="Calçado">Calçado</SelectItem>
+                                    <SelectItem value="Livros">Livros</SelectItem>
+                                    <SelectItem value="Eletrónica">Eletrónica</SelectItem>
+                                    <SelectItem value="Outro">Outro</SelectItem>
+                                </SelectContent>
+                            </Select>
+                         )}/>
                         {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="condition">Condição</Label>
-                         <Controller
-                            name="condition"
-                            control={control}
-                            render={({ field }) => (
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <SelectTrigger><SelectValue placeholder="Selecione a condição" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Novo">Novo</SelectItem>
-                                        <SelectItem value="Muito bom">Muito bom</SelectItem>
-                                        <SelectItem value="Bom">Bom</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
+                         <Controller name="condition" control={control} render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger><SelectValue placeholder="Selecione a condição" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Novo">Novo</SelectItem>
+                                    <SelectItem value="Muito bom">Muito bom</SelectItem>
+                                    <SelectItem value="Bom">Bom</SelectItem>
+                                </SelectContent>
+                            </Select>
+                         )}/>
                         {errors.condition && <p className="text-sm text-destructive">{errors.condition.message}</p>}
                     </div>
                  </div>
-                 <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                 <Button type="submit" className="w-full" size="lg" disabled={isSubmitting || authLoading}>
+                    {(isSubmitting || authLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Publicar Anúncio
                  </Button>
             </div>

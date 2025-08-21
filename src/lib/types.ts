@@ -13,17 +13,16 @@ export type Product = {
   userName: string;
   createdAt?: Timestamp;
   sizes?: string[];
-  colors?: string[];
   brand?: string;
   material?: string;
-  originalPrice?: number;
+  quantity: number;
+  userId: string; // CAMPO ADICIONADO PARA LIGAR O PRODUTO AO DONO
 };
 
 export interface AddToCartPayload {
   product: Product;
   quantity: number;
   size?: string;
-  color?: string;
 }
 
 export type CartItem = AddToCartPayload & {

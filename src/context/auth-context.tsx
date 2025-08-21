@@ -1,55 +1,65 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect, useCallback } from 'react';
+import { auth, db } from '@/lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth'; 
+import { doc, getDoc } from 'firebase/firestore';
 
-interface User {
+interface AppUser {
+  uid: string;
+  email: string | null;
   name: string;
-  email: string;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
-  login: (user: User) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simular a verificação de uma sessão existente no carregamento da página
-    try {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        const userDocRef = doc(db, "users", firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: userDoc.data().username,
+          });
+        } else {
+            setUser(null);
+        }
+      } else {
+        setUser(null);
       }
-    } catch (error) {
-      console.error("Failed to parse user from localStorage", error);
-      localStorage.removeItem('user');
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const login = (userData: User) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-  };
+  const logout = useCallback(async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-  };
-  
   const value = useMemo(() => ({
     user,
     loading,
-    login,
     logout,
-  }), [user, loading]);
+  }), [user, loading, logout]);
 
   return (
     <AuthContext.Provider value={value}>

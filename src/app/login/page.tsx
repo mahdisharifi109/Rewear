@@ -9,36 +9,48 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/auth-context";
 import { loginSchema, type LoginFormValues } from "@/lib/schemas";
+import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const { toast } = useToast();
-  const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/';
+  const [isLoading, setIsLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    }
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    // Simulação de autenticação
-    const user = {
-        name: data.email.split('@')[0], // Nome de utilizador simulado
-        email: data.email 
-    };
-    login(user);
-    toast({
-      title: "Login (Simulação)",
-      description: "Sessão iniciada com sucesso! (Simulado)",
-    });
-    router.push(redirectUrl);
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsLoading(true);
+    try {
+        await signInWithEmailAndPassword(auth, data.email, data.password);
+        toast({
+          title: "Sessão iniciada!",
+          description: "Bem-vindo de volta!",
+        });
+        router.push(redirectUrl);
+    } catch (error: any) {
+        console.error("Erro no login:", error);
+        let description = "Ocorreu um erro. Por favor, tente novamente.";
+        
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+            description = "O email ou a palavra-passe estão incorretos.";
+        }
+        
+        toast({
+            variant: "destructive",
+            title: "Erro ao Iniciar Sessão",
+            description: description,
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -60,7 +72,8 @@ export default function LoginPage() {
               <Input id="password" type="password" placeholder="••••••••" {...register("password")} />
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Iniciar Sessão
             </Button>
           </form>

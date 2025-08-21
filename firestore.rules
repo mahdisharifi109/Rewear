@@ -1,10 +1,21 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Qualquer pessoa pode ler os produtos
     match /products/{productId} {
-      // Permite que qualquer pessoa leia, crie, edite ou apague produtos.
-      // Ideal para um ambiente de desenvolvimento e apresentação.
-      allow read, write: if true;
+      allow read: if true;
+      
+      // Apenas um utilizador autenticado pode criar um produto
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+
+      // Apenas o dono do produto o pode atualizar ou apagar
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Um utilizador só pode criar e modificar o seu próprio documento
+    match /users/{userId} {
+      allow read, create, update: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

@@ -23,17 +23,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        {/* A ordem dos Providers foi corrigida aqui. CartProvider agora envolve AuthProvider. */}
-        <CartProvider>
-          <AuthProvider>
-            <ProductProvider>
+        <AuthProvider>
+          <ProductProvider>
+            <CartProvider>
               <div className="flex min-h-screen flex-col">
                 <Header />
                 <main className="flex-1">
@@ -44,9 +43,9 @@ export default function RootLayout({
                 <Footer />
               </div>
               <Toaster />
-            </ProductProvider>
-          </AuthProvider>
-        </CartProvider>
+            </CartProvider>
+          </ProductProvider>
+        </AuthProvider>
       </body>
     </html>
   );
