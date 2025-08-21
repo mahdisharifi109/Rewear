@@ -164,12 +164,14 @@ export function SellForm() {
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="price">Preço (€)</Label>
-                        <Controller name="price" control={control} render={({ field }) => <Input id="price" type="number" step="0.01" placeholder="25.00" {...field} />} />
+                        {/* CORREÇÃO AQUI */}
+                        <Controller name="price" control={control} render={({ field }) => <Input id="price" type="number" step="0.01" placeholder="25.00" {...field} value={field.value ?? ''} />} />
                         {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="quantity">Quantidade</Label>
-                        <Controller name="quantity" control={control} render={({ field }) => <Input id="quantity" type="number" step="1" placeholder="1" {...field} />} />
+                        {/* CORREÇÃO AQUI */}
+                        <Controller name="quantity" control={control} render={({ field }) => <Input id="quantity" type="number" step="1" placeholder="1" {...field} value={field.value ?? ''} />} />
                         {errors.quantity && <p className="text-sm text-destructive">{errors.quantity.message}</p>}
                     </div>
                  </div>
@@ -187,6 +189,7 @@ export function SellForm() {
                  </div>
                  <div className="space-y-2">
                     <Label htmlFor="sizes">Tamanhos* (separados por vírgula)</Label>
+                    {/* CORREÇÃO AQUI */}
                     <Controller name="sizes" control={control} render={({ field }) => <Input id="sizes" placeholder="S, M, L, XL" {...field} value={field.value ?? ''} />} />
                     {errors.sizes && <p className="text-sm text-destructive">{errors.sizes.message}</p>}
                  </div>
