@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             name: userData.username,
-            favorites: userData.favorites || [], // Garante que a lista existe
+            favorites: userData.favorites || [], // Garante que a lista existe localmente
           });
         } else {
             setUser(null);
@@ -63,30 +63,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const toggleFavorite = useCallback(async (productId: string) => {
     if (!user) return;
     
-    console.log("A tentar alterar favoritos para o produto:", productId);
     const userDocRef = doc(db, "users", user.uid);
     // Usar 'user.favorites' que já está no estado local da aplicação
     const isFavorited = user.favorites.includes(productId);
 
     try {
       if (isFavorited) {
-        console.log("Produto já é favorito. A remover...");
         await updateDoc(userDocRef, { favorites: arrayRemove(productId) });
         // Atualiza o estado local para uma resposta imediata na interface
         setUser(currentUser => currentUser ? { ...currentUser, favorites: currentUser.favorites.filter(id => id !== productId) } : null);
-        console.log("Removido com sucesso.");
       } else {
-        console.log("Produto não é favorito. A adicionar...");
         await updateDoc(userDocRef, { favorites: arrayUnion(productId) });
         // Atualiza o estado local
         setUser(currentUser => currentUser ? { ...currentUser, favorites: [...currentUser.favorites, productId] } : null);
-        console.log("Adicionado com sucesso.");
       }
     } catch (error) {
         console.error("ERRO AO ATUALIZAR FAVORITOS NA BASE DE DADOS:", error);
+        // Se houver um erro, avisa o componente que chamou a função
+        throw error;
     }
   }, [user]);
-  // --- FIM DA CORREÇÃO ---
 
   const value = useMemo(() => ({
     user,

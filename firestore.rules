@@ -2,25 +2,24 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Qualquer pessoa pode ler os produtos
     match /products/{productId} {
       allow read: if true;
-      
-      // Apenas um utilizador autenticado pode criar um produto
-      // e o ID do utilizador no produto tem de ser o seu próprio ID
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-
-      // Apenas o dono do produto o pode atualizar ou apagar
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
-    // Um utilizador só pode gerir o seu próprio documento
     match /users/{userId} {
-      // Qualquer pessoa pode ler a informação pública de um perfil (para as páginas de vendedor)
       allow get: if true;
-
-      // Mas apenas o próprio utilizador pode criar ou atualizar o seu perfil
       allow create, update: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // NOVAS REGRAS PARA AS AVALIAÇÕES
+    match /reviews/{reviewId} {
+      // Qualquer pessoa pode ler as avaliações
+      allow read: if true;
+
+      // Apenas utilizadores autenticados podem criar avaliações
+      allow create: if request.auth != null;
     }
   }
 }

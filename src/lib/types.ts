@@ -11,12 +11,12 @@ export type Product = {
   imageHint: string;
   userEmail: string;
   userName: string;
+  userId: string;
+  quantity: number;
   createdAt?: Timestamp;
   sizes?: string[];
   brand?: string;
   material?: string;
-  quantity: number;
-  userId: string; // CAMPO ADICIONADO PARA LIGAR O PRODUTO AO DONO
 };
 
 export interface AddToCartPayload {
@@ -25,6 +25,17 @@ export interface AddToCartPayload {
   size?: string;
 }
 
+// A CORREÇÃO ESTAVA AQUI
 export type CartItem = AddToCartPayload & {
   id: string; 
+};
+
+export type Review = {
+  id: string;
+  sellerId: string;
+  buyerId: string;
+  buyerName: string;
+  rating: number;
+  comment: string;
+  createdAt: Timestamp;
 };

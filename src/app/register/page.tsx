@@ -34,12 +34,11 @@ export default function RegisterPage() {
       const user = userCredential.user;
 
       // 2. Criar um documento para o utilizador no Firestore
-      // A CORREÇÃO ESTÁ AQUI: Adicionamos os campos em falta
+      // A CORREÇÃO ESTÁ AQUI: Adicionamos o campo 'favorites' vazio
       await setDoc(doc(db, "users", user.uid), {
         username: data.username,
         email: data.email,
-        avatarStyle: "initials", // Definir 'initials' como padrão
-        favorites: [], 
+        favorites: [], // Garante que a lista de favoritos existe desde o início
       });
 
       toast({

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -25,12 +25,11 @@ export default function ProductDetailPage() {
   const { toast } = useToast();
   const { addToCart } = useCart();
   const { products } = useProducts();
-  const { user, toggleFavorite } = useAuth(); // Obter a nova função
+  const { user, toggleFavorite } = useAuth();
   
   const id = params.id as string;
   const product = useMemo(() => products.find(p => p.id === id), [products, id]);
   
-  // O estado agora vem diretamente do 'user'
   const isFavorited = useMemo(() => user?.favorites?.includes(product?.id || '') || false, [user, product]);
 
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
@@ -62,12 +61,25 @@ export default function ProductDetailPage() {
     router.push(`/product/${product.id}/edit`);
   };
 
-  const handleFavoriteClick = () => {
+  // --- FUNÇÃO handleFavoriteClick ATUALIZADA ---
+  const handleFavoriteClick = async () => {
     if (!user) {
         toast({ variant: "destructive", title: "Acesso Negado", description: "Precisa de fazer login para guardar favoritos." });
         return;
     }
-    toggleFavorite(product.id);
+    try {
+        await toggleFavorite(product.id);
+        // O toast agora mostra a mensagem de sucesso correta
+        toast({
+            title: !isFavorited ? "Guardado nos Favoritos" : "Removido dos Favoritos",
+        });
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Não foi possível atualizar os favoritos. Tente novamente."
+        })
+    }
   };
   
   const detailItems = [
