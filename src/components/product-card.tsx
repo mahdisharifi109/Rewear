@@ -38,9 +38,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const isOwner = user && user.email === product.userEmail;
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault(); 
-    e.stopPropagation(); 
-    addToCart(product);
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({ product, quantity: 1 });
     toast({
       title: "Adicionado ao carrinho",
       description: `${product.name} foi adicionado ao seu carrinho.`,
@@ -53,11 +53,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     router.push(`/product/${product.id}/edit`);
   };
 
-  // ESTA É A FUNÇÃO CORRIGIDA
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-
     try {
       await deleteProduct(product.id);
       toast({
@@ -65,7 +63,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         description: "O seu produto foi removido com sucesso.",
       });
     } catch (error: any) {
-      console.error("Falha ao apagar o produto:", error);
       toast({
         variant: "destructive",
         title: "Erro ao apagar",
@@ -75,8 +72,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="group block h-full">
-      <Card className="flex flex-col overflow-hidden transition-shadow duration-300 group-hover:shadow-lg h-full">
+    <Card className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg h-full">
+      <Link href={`/product/${product.id}`} className="group block">
         <CardHeader className="p-0 border-b">
           <div className="relative aspect-[4/3] w-full overflow-hidden">
             <Image
@@ -100,44 +97,44 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="p-4 pt-0 mt-auto">
-          {isOwner ? (
-            <div className="w-full flex gap-2">
-              <Button variant="outline" className="w-full" onClick={handleEdit}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Editar
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Apagar
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Tem a certeza?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta ação não pode ser desfeita. O seu produto será apagado permanentemente.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>Cancelar</AlertDialogCancel>
-                    {/* ESTA É A LINHA CORRIGIDA */}
-                    <AlertDialogAction onClick={(e) => handleDelete(e)}>Continuar</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          ) : (
-            <Button className="w-full" onClick={handleAddToCart} disabled={Boolean(!user || isOwner)}>
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              { !user ? "Faça login para comprar" : "Adicionar ao Carrinho" }
+      </Link>
+      <CardFooter className="p-4 pt-0 mt-auto">
+        {isOwner ? (
+          <div className="w-full flex gap-2">
+            <Button variant="outline" className="w-full" onClick={handleEdit}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Editar
             </Button>
-          )}
-        </CardFooter>
-      </Card>
-    </Link>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Apagar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Tem a certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. O seu produto será apagado permanentemente.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ) : (
+          // CORREÇÃO FINAL E DEFINITIVA AQUI
+          <Button className="w-full" onClick={handleAddToCart} disabled={!user || !!isOwner}>
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            { !user ? "Faça login para comprar" : "Adicionar ao Carrinho" }
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
   );
 }
 

@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, ReactNode, useMemo, useCall
 import { collection, onSnapshot, addDoc, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+// CORREÇÃO: Definir NewProduct para incluir os novos campos opcionais do tipo Product
 type NewProduct = Omit<Product, 'id' | 'createdAt'>;
 
 interface ProductContextType {

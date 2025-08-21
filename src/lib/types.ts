@@ -1,4 +1,3 @@
-// src/lib/types.ts
 import { Timestamp } from "firebase/firestore";
 
 export type Product = {
@@ -11,11 +10,22 @@ export type Product = {
   imageUrls: string[];
   imageHint: string;
   userEmail: string;
-  userName: string; // Adicionado nome do vendedor
+  userName: string;
   createdAt?: Timestamp;
+  sizes?: string[];
+  colors?: string[];
+  brand?: string;
+  material?: string;
+  originalPrice?: number;
 };
 
-export type CartItem = {
+export interface AddToCartPayload {
   product: Product;
   quantity: number;
+  size?: string;
+  color?: string;
+}
+
+export type CartItem = AddToCartPayload & {
+  id: string; 
 };

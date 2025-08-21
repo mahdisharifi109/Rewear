@@ -1,12 +1,12 @@
 "use client";
 
-import type { CartItem, Product } from '@/lib/types';
-import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import type { CartItem, Product, AddToCartPayload } from '@/lib/types';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 
 interface CartContextType {
   cartItems: CartItem[];
-  addToCart: (product: Product) => void;
-  removeFromCart: (productId: string) => void; // Corrigido de number para string
+  addToCart: (payload: AddToCartPayload) => void; // CORREÇÃO AQUI
+  removeFromCart: (cartItemId: string) => void;
   clearCart: () => void;
   cartCount: number;
 }
@@ -16,23 +16,25 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = useCallback(({ product, quantity, size, color }: AddToCartPayload) => {
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.product.id === product.id);
+      const cartItemId = `${product.id}-${size || ''}-${color || ''}`;
+      const existingItem = prevItems.find(item => item.id === cartItemId);
+
       if (existingItem) {
         return prevItems.map(item =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+          item.id === cartItemId
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prevItems, { product, quantity: 1 }];
+      return [...prevItems, { id: cartItemId, product, quantity, size, color }];
     });
-  };
+  }, []);
 
-  const removeFromCart = (productId: string) => { // Corrigido de number para string
-    setCartItems(prevItems => prevItems.filter(item => item.product.id !== productId));
-  };
+  const removeFromCart = useCallback((cartItemId: string) => {
+    setCartItems(prevItems => prevItems.filter(item => item.id !== cartItemId));
+  }, []);
 
   const clearCart = () => {
     setCartItems([]);
@@ -48,7 +50,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     removeFromCart,
     clearCart,
     cartCount,
-  }), [cartItems, addToCart, removeFromCart, clearCart, cartCount]); // Adicionadas dependências em falta
+  }), [cartItems, addToCart, removeFromCart, cartCount]);
 
   return (
     <CartContext.Provider value={value}>
