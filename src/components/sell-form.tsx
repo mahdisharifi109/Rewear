@@ -16,12 +16,16 @@ import { useProducts } from "@/context/product-context";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { sellFormSchema, type SellFormValues } from "@/lib/schemas";
+import { SelectOrInput } from "./ui/select-or-input"; // Caminho da importação corrigido
+
+const PREDEFINED_BRANDS = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac"];
+const PREDEFINED_MATERIALS = ["Algodão", "Poliéster", "Lã", "Seda", "Plástico", "Metal"];
 
 export function SellForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { addProduct } = useProducts();
-  const { user, loading: authLoading } = useAuth(); // Obter o estado de loading
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const { control, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm<SellFormValues>({
@@ -102,7 +106,6 @@ export function SellForm() {
         reset();
         router.push('/');
     } catch (error) {
-        console.error("Erro ao publicar o produto:", error)
         toast({ variant: "destructive", title: "Erro ao Publicar", description: "Ocorreu um erro. Verifique as permissões da base de dados e tente novamente." })
     } finally {
         setIsSubmitting(false);
@@ -111,17 +114,7 @@ export function SellForm() {
 
   if (authLoading) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Venda o seu artigo</CardTitle>
-                <CardDescription>A verificar a sua sessão...</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-            </CardContent>
-        </Card>
+        <Card><CardHeader><CardTitle>Venda o seu artigo</CardTitle><CardDescription>A verificar a sua sessão...</CardDescription></CardHeader><CardContent><div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div></CardContent></Card>
     )
   }
 
@@ -183,12 +176,12 @@ export function SellForm() {
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="brand">Marca*</Label>
-                        <Controller name="brand" control={control} render={({ field }) => <Input id="brand" placeholder="Ex: Zara" {...field} value={field.value ?? ''} />} />
+                        <Controller name="brand" control={control} render={({ field }) => <SelectOrInput options={PREDEFINED_BRANDS} placeholder="Selecione ou escreva uma marca" {...field} />} />
                         {errors.brand && <p className="text-sm text-destructive">{errors.brand.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="material">Material*</Label>
-                        <Controller name="material" control={control} render={({ field }) => <Input id="material" placeholder="Ex: Algodão" {...field} value={field.value ?? ''} />} />
+                        <Controller name="material" control={control} render={({ field }) => <SelectOrInput options={PREDEFINED_MATERIALS} placeholder="Selecione ou escreva um material" {...field} />} />
                         {errors.material && <p className="text-sm text-destructive">{errors.material.message}</p>}
                     </div>
                  </div>

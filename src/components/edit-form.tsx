@@ -17,6 +17,11 @@ import { useRouter } from "next/navigation";
 import { Product } from "@/lib/types";
 import { editFormSchema, type EditFormValues } from "@/lib/schemas";
 import { useAuth } from "@/context/auth-context";
+import { SelectOrInput } from "./ui/select-or-input"; // Caminho da importação corrigido
+
+const PREDEFINED_BRANDS = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac"];
+const PREDEFINED_MATERIALS = ["Algodão", "Poliéster", "Lã", "Seda", "Plástico", "Metal"];
+
 
 interface EditFormProps {
   product: Product;
@@ -82,7 +87,6 @@ export function EditForm({ product }: EditFormProps) {
 
         const sizesArray = data.sizes ? data.sizes.split(',').map(s => s.trim().toUpperCase()) : [];
 
-        // Objeto de dados completo para garantir que todos os campos são enviados
         const productData: Product = {
           id: product.id,
           name: data.title,
@@ -98,7 +102,7 @@ export function EditForm({ product }: EditFormProps) {
           imageHint: data.title.split(" ").slice(0, 2).join(" "),
           userEmail: product.userEmail,
           userName: product.userName || user?.name || 'Vendedor Desconhecido',
-          userId: product.userId, // Garante que o ID do dono é mantido
+          userId: product.userId,
         };
 
         await updateProduct(productData);
@@ -113,7 +117,6 @@ export function EditForm({ product }: EditFormProps) {
     }
   };
 
-  // ... O resto do componente JSX permanece igual ...
   return (
     <Card>
       <CardHeader>
@@ -173,12 +176,12 @@ export function EditForm({ product }: EditFormProps) {
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="brand">Marca*</Label>
-                        <Controller name="brand" control={control} render={({ field }) => <Input id="brand" {...field} value={field.value ?? ''} />} />
+                        <Controller name="brand" control={control} render={({ field }) => <SelectOrInput options={PREDEFINED_BRANDS} placeholder="Selecione ou escreva uma marca" {...field} />} />
                         {errors.brand && <p className="text-sm text-destructive">{errors.brand.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="material">Material*</Label>
-                        <Controller name="material" control={control} render={({ field }) => <Input id="material" {...field} value={field.value ?? ''} />} />
+                        <Controller name="material" control={control} render={({ field }) => <SelectOrInput options={PREDEFINED_MATERIALS} placeholder="Selecione ou escreva um material" {...field} />} />
                         {errors.material && <p className="text-sm text-destructive">{errors.material.message}</p>}
                     </div>
                  </div>
