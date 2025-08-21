@@ -9,14 +9,12 @@ export const sellFormSchema = z.object({
   category: z.string().min(1, "Por favor, selecione uma categoria."),
   condition: z.string().min(1, "Por favor, selecione a condição do artigo."),
   images: z.array(imageSchema).min(1, "Pelo menos uma imagem é obrigatória."),
-  
-  // Campo Quantidade adicionado e obrigatório
   quantity: z.coerce.number().min(1, "A quantidade deve ser pelo menos 1."),
 
-  // Campos opcionais
-  brand: z.string().optional(),
-  material: z.string().optional(),
-  sizes: z.string().optional(),
+  // CORREÇÃO: Adicionar .default('') para garantir que o valor é sempre uma string
+  brand: z.string().optional().default(''),
+  material: z.string().optional().default(''),
+  sizes: z.string().optional().default(''),
 });
 
 export const editFormSchema = sellFormSchema;
@@ -36,7 +34,6 @@ export const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-// Esquema para o novo formulário de checkout
 export const checkoutSchema = z.object({
     email: z.string().email("Email inválido."),
     firstName: z.string().min(1, "O nome é obrigatório."),

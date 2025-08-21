@@ -16,7 +16,7 @@ import { useProducts } from "@/context/product-context";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { sellFormSchema, type SellFormValues } from "@/lib/schemas";
-import { SelectOrInput } from "./ui/select-or-input"; // Caminho da importação corrigido
+import { SelectOrInput } from "./ui/select-or-input";
 
 const PREDEFINED_BRANDS = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac"];
 const PREDEFINED_MATERIALS = ["Algodão", "Poliéster", "Lã", "Seda", "Plástico", "Metal"];

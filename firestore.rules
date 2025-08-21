@@ -13,7 +13,7 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
-    // Um utilizador só pode criar e modificar o seu próprio documento
+    // Um utilizador só pode gerir o seu próprio documento
     match /users/{userId} {
       allow read, create, update: if request.auth != null && request.auth.uid == userId;
     }

@@ -17,11 +17,10 @@ import { useRouter } from "next/navigation";
 import { Product } from "@/lib/types";
 import { editFormSchema, type EditFormValues } from "@/lib/schemas";
 import { useAuth } from "@/context/auth-context";
-import { SelectOrInput } from "./ui/select-or-input"; // Caminho da importação corrigido
+import { SelectOrInput } from "./ui/select-or-input";
 
 const PREDEFINED_BRANDS = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac"];
 const PREDEFINED_MATERIALS = ["Algodão", "Poliéster", "Lã", "Seda", "Plástico", "Metal"];
-
 
 interface EditFormProps {
   product: Product;
