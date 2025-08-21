@@ -8,10 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import ProductCard from '@/components/product-card'; // CORREÇÃO: Importação alterada aqui
+import ProductCard from '@/components/product-card';
 import { Separator } from '@/components/ui/separator';
 import { useProducts } from '@/context/product-context';
-import { Settings } from 'lucide-react';
+import { Settings, Loader2 } from 'lucide-react';
 
 
 export default function ProfilePage() {
@@ -33,13 +33,14 @@ export default function ProfilePage() {
 
   const userProducts = useMemo(() => {
     if (!user) return [];
-    return products.filter(p => p.userEmail === user.email);
+    return products.filter(p => p.userId === user.uid);
   }, [products, user]);
 
   if (loading || productsLoading || !user) {
     return (
         <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8 text-center">
-            <p>A carregar perfil...</p>
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+            <p className="mt-2">A carregar perfil...</p>
         </div>
     );
   }
@@ -49,7 +50,8 @@ export default function ProfilePage() {
         <Card>
             <CardHeader className="items-center text-center">
                 <Avatar className="mx-auto h-24 w-24 mb-4">
-                    <AvatarImage src={`https://api.dicebear.com/8.x/bottts-neutral/svg?seed=${user.email ?? ''}`} alt={user.name ?? 'Avatar do utilizador'} />
+                    {/* AVATAR ATUALIZADO PARA O ESTILO "INICIAIS" */}
+                    <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${user.name ?? 'V'}`} alt={user.name ?? 'Avatar do utilizador'} />
                     <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
                 <CardTitle className="text-3xl">{user.name}</CardTitle>

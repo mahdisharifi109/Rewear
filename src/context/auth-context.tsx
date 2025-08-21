@@ -5,6 +5,7 @@ import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth'; 
 import { doc, getDoc } from 'firebase/firestore';
 
+// O tipo de utilizador volta a ser mais simples
 interface AppUser {
   uid: string;
   email: string | null;
@@ -30,10 +31,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userDoc = await getDoc(userDocRef);
         
         if (userDoc.exists()) {
+          const userData = userDoc.data();
           setUser({
             uid: firebaseUser.uid,
             email: firebaseUser.email,
-            name: userDoc.data().username,
+            name: userData.username,
           });
         } else {
             setUser(null);

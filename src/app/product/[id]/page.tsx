@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useProducts } from '@/context/product-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,9 +43,9 @@ export default function ProductDetailPage() {
     );
   }
 
-  const isOwner = user && product && user.email === product.userEmail;
+  const isOwner = user && user.uid === product.userId;
   const hasSizes = product.sizes && product.sizes.length > 0;
-  const isAddToCartDisabled = (hasSizes && !selectedSize) || isOwner || product.quantity < 1;
+  const isAddToCartDisabled = (hasSizes && !selectedSize) || !!isOwner || product.quantity < 1;
 
   const handleAddToCart = () => {
     if (isAddToCartDisabled) return;
@@ -91,13 +92,16 @@ export default function ProductDetailPage() {
                     <div className="flex justify-between items-start">
                         <div>
                             <h1 className="text-2xl font-bold">{product.name}</h1>
-                            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                                <Avatar className="h-6 w-6">
-                                    <AvatarImage src={`https://api.dicebear.com/8.x/bottts-neutral/svg?seed=${product.userEmail ?? ''}`} />
-                                    <AvatarFallback>{product.userName ? product.userName.charAt(0) : 'V'}</AvatarFallback>
-                                </Avatar>
-                                <span>{product.userName || 'Vendedor anónimo'}</span>
-                            </div>
+                            <Link href={`/seller/${product.userId}`} className="inline-block">
+                                <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+                                    <Avatar className="h-6 w-6">
+                                        {/* AVATAR ATUALIZADO PARA O ESTILO "INICIAIS" */}
+                                        <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${product.userName ?? 'V'}`} />
+                                        <AvatarFallback>{product.userName ? product.userName.charAt(0) : 'V'}</AvatarFallback>
+                                    </Avatar>
+                                    <span>{product.userName || 'Vendedor anónimo'}</span>
+                                </div>
+                            </Link>
                         </div>
                         <div className="text-right">
                            <p className="text-2xl font-bold text-primary">{product.price.toFixed(2)}€</p>

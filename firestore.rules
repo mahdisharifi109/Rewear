@@ -2,20 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Qualquer pessoa pode ler os produtos
     match /products/{productId} {
       allow read: if true;
-      
-      // Apenas um utilizador autenticado pode criar um produto
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-
-      // Apenas o dono do produto o pode atualizar ou apagar
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
-    // Um utilizador só pode gerir o seu próprio documento
+    // REGRAS DE UTILIZADOR ATUALIZADAS
     match /users/{userId} {
-      allow read, create, update: if request.auth != null && request.auth.uid == userId;
+      // Qualquer pessoa pode LER (get) a informação de um perfil público.
+      allow get: if true;
+      
+      // Mas apenas o próprio utilizador pode CRIAR ou ATUALIZAR o seu perfil.
+      allow create, update: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
