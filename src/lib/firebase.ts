@@ -1,22 +1,22 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth'; // Importar getAuth
+import { getAuth } from 'firebase/auth';
 
-// As tuas credenciais do Firebase
+// As tuas credenciais do Firebase a partir de variáveis de ambiente
 const firebaseConfig = {
-  apiKey: "AIzaSyDD17WDp1lwMtD9qeubYD0NJ0VbdQ0P1jo",
-  authDomain: "fir-config-12a50.firebaseapp.com",
-  projectId: "fir-config-12a50",
-  storageBucket: "fir-config-12a50.appspot.com",
-  messagingSenderId: "580819717100",
-  appId: "1:580819717100:web:38d3a481dd722eeb280ec9",
-  measurementId: "G-DN1JZER9ZL"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // Inicializar a app Firebase de forma segura
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
-const auth = getAuth(app); // Inicializar o Auth
+const auth = getAuth(app);
 
-export { app, db, auth }; // Exportar o auth
+export { app, db, auth };

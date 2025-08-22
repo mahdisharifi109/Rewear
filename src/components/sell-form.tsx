@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { sellFormSchema, type SellFormValues } from "@/lib/schemas";
 import { SelectOrInput } from "./ui/select-or-input";
+import { fileToDataUri } from "@/lib/imageUtils"; // Importar a função
 
 const PREDEFINED_BRANDS = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac"];
 const PREDEFINED_MATERIALS = ["Algodão", "Poliéster", "Lã", "Seda", "Plástico", "Metal"];
@@ -37,14 +38,7 @@ export function SellForm() {
 
   const imagePreviews = watch("images");
 
-  const fileToDataUri = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
+  // A função fileToDataUri foi removida daqui
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -70,7 +64,7 @@ export function SellForm() {
         const imageUrls = await Promise.all(
             data.images.map(image => {
                 if (typeof image === 'string') return image;
-                return fileToDataUri(image as File);
+                return fileToDataUri(image as File); // Usar a função importada
             })
         );
         
@@ -106,6 +100,7 @@ export function SellForm() {
       </CardHeader>
       <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* O resto do JSX permanece igual */}
             <div className="space-y-2">
               <Label htmlFor="image-upload">Imagens do Produto</Label>
                <div className="relative flex justify-center items-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors">
