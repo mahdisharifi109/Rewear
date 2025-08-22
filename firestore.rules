@@ -18,11 +18,22 @@ service cloud.firestore {
       allow create: if request.auth != null;
     }
 
-    // --- REGRAS NOVAS PARA NOTIFICAÇÕES ---
     match /notifications/{notificationId} {
-      // O utilizador só pode ler e escrever as suas próprias notificações
       allow read, update: if request.auth != null && request.auth.uid == resource.data.userId;
       allow create: if request.auth != null;
+    }
+
+    // --- REGRAS NOVAS PARA O CHAT ---
+    match /conversations/{conversationId} {
+      // Um utilizador só pode ler ou escrever numa conversa se for um dos participantes
+      allow read, create, update: if request.auth != null && request.auth.uid in resource.data.participantIds;
+    }
+
+    match /conversations/{conversationId}/messages/{messageId} {
+      // Um utilizador só pode ler as mensagens de uma conversa da qual participa
+      allow read: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid]);
+      // Um utilizador só pode criar uma mensagem se for o remetente e participar na conversa
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.senderId && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid]);
     }
   }
 }

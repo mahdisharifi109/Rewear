@@ -11,12 +11,21 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2 } from 'lucide-react';
+
+const availableBrands = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac", "Outro"];
+const availableSizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
 export default function SettingsPage() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, updateUserPreferences } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const [username, setUsername] = useState(user?.name || '');
+
+  const [username, setUsername] = useState('');
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
     if (!loading && !user) {
@@ -28,16 +37,47 @@ export default function SettingsPage() {
       router.push('/login');
     } else if (user) {
       setUsername(user.name || '');
+      setSelectedBrands(user.preferredBrands || []);
+      setSelectedSizes(user.preferredSizes || []);
     }
   }, [user, loading, router, toast]);
 
   if (loading || !user) {
     return (
-      <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8 text-center">
-        <p>A carregar definições...</p>
+      <div className="container mx-auto flex min-h-[80vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
+  
+  const handleCheckboxChange = (
+    value: string, 
+    checked: boolean, 
+    currentValues: string[], 
+    setter: React.Dispatch<React.SetStateAction<string[]>>
+  ) => {
+    const newValues = checked ? [...currentValues, value] : currentValues.filter(v => v !== value);
+    setter(newValues);
+  };
+
+  const handleSaveChanges = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      await updateUserPreferences({
+        preferredBrands: selectedBrands,
+        preferredSizes: selectedSizes,
+      });
+      toast({
+        title: 'Definições Guardadas!',
+        description: 'As suas preferências foram atualizadas com sucesso.',
+      });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Erro", description: "Não foi possível guardar as suas preferências." });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleDeleteAccount = () => {
     logout();
@@ -48,82 +88,88 @@ export default function SettingsPage() {
     router.push('/');
   }
 
-  const handleSaveChanges = async (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: 'Alterações Guardadas!',
-      description: 'As suas preferências de perfil foram atualizadas.',
-    });
-  };
-
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
-      <form onSubmit={handleSaveChanges}>
+    <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Definições da Conta</h1>
+        <p className="text-muted-foreground">Gira as tuas informações pessoais e preferências da plataforma.</p>
+      </div>
+      
+      <form onSubmit={handleSaveChanges} className="space-y-8">
+        {/* Secção de Detalhes do Perfil */}
         <Card>
           <CardHeader>
-            <CardTitle>Definições</CardTitle>
-            <CardDescription>Faça a gestão das suas informações de conta e preferências.</CardDescription>
+            <CardTitle>Detalhes do Perfil</CardTitle>
+            <CardDescription>Informações básicas sobre a sua conta.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-8">
-            {/* Secção do Perfil */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Perfil</h3>
+          <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${user.name ?? 'V'}`} />
                   <AvatarFallback>{user.name ? user.name.charAt(0) : 'V'}</AvatarFallback>
                 </Avatar>
-                <div className='flex-1 space-y-2'>
-                    <Label htmlFor="username">Nome de utilizador</Label>
-                    <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} disabled />
-                </div>
+                <p className="font-semibold">{user.name}</p>
               </div>
                <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue={user.email!} disabled />
+                  <Input id="email" type="email" value={user.email!} disabled />
+              </div>
+          </CardContent>
+        </Card>
+
+        {/* Secção de Personalização */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Personalização do Feed</CardTitle>
+            <CardDescription>Escolha as suas marcas e tamanhos preferidos para ver os artigos que mais lhe interessam.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <Label className="text-base font-medium">Marcas Preferidas</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                {availableBrands.map(brand => (
+                  <div key={brand} className="flex items-center space-x-2">
+                    <Checkbox id={`brand-${brand}`} checked={selectedBrands.includes(brand)} onCheckedChange={(checked) => handleCheckboxChange(brand, !!checked, selectedBrands, setSelectedBrands)} />
+                    <Label htmlFor={`brand-${brand}`} className="font-normal">{brand}</Label>
+                  </div>
+                ))}
               </div>
             </div>
-
-            <Separator />
-
-            {/* Secção de Perigo */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-destructive">Zona de Perigo</h3>
-              <Card className="border-destructive">
-                  <CardHeader>
-                      <CardTitle className="text-destructive">Eliminar Conta</CardTitle>
-                      <CardDescription>
-                          Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente eliminados.
-                      </CardDescription>
-                  </CardHeader>
-                  <CardFooter>
-                      <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                              <Button variant="destructive">Eliminar a minha conta</Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                              <AlertDialogHeader>
-                              <AlertDialogTitle>Tem a certeza absoluta?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                  Esta ação não pode ser desfeita. Isto irá remover permanentemente a sua conta.
-                              </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
-                                  Sim, eliminar conta
-                              </AlertDialogAction>
-                              </AlertDialogFooter>
-                          </AlertDialogContent>
-                      </AlertDialog>
-                  </CardFooter>
-              </Card>
+            <div>
+              <Label className="text-base font-medium">Tamanhos Preferidos</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                {availableSizes.map(size => (
+                  <div key={size} className="flex items-center space-x-2">
+                    <Checkbox id={`size-${size}`} checked={selectedSizes.includes(size)} onCheckedChange={(checked) => handleCheckboxChange(size, !!checked, selectedSizes, setSelectedSizes)} />
+                    <Label htmlFor={`size-${size}`} className="font-normal">{size}</Label>
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
-          <CardFooter>
-              <Button type="submit" className="w-full">Guardar Alterações</Button>
-          </CardFooter>
         </Card>
+        
+        <CardFooter className="flex justify-between items-center px-0">
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive">Eliminar Conta</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Tem a certeza absoluta?</AlertDialogTitle>
+                    <AlertDialogDescription>Esta ação não pode ser desfeita. Isto irá remover permanentemente a sua conta.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">Sim, eliminar conta</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Guardar Alterações
+            </Button>
+        </CardFooter>
       </form>
     </div>
   );

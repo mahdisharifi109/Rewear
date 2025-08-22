@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useProducts } from '@/context/product-context';
 import ProductCard from '@/components/product-card';
@@ -42,7 +42,7 @@ export default function FavoritesPage() {
     }
 
     return (
-        <div className="container mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Os Seus Favoritos</h1>
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">

@@ -1,6 +1,8 @@
 import { ProductGrid } from "@/components/product-grid";
-import { FiltersSidebar } from "@/components/filters-sidebar"; // Importar o novo componente
+import { HowItWorks } from "@/components/how-it-works"; // Importar o novo componente
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { Suspense } from "react";
 
 function ProductGridFallback() {
@@ -14,32 +16,40 @@ function ProductGridFallback() {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export default function Home() {
   return (
     <>
+      {/* Nova Hero Section */}
       <section className="bg-primary/10">
-        <div className="container py-20 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Encontre Tesouros em Segunda Mão</h1>
-            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Compre e venda moda, livros, eletrónica e mais. Dê uma segunda vida aos seus artigos.</p>
+        <div className="container py-24 text-center">
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
+              Dê uma segunda vida à sua roupa.
+            </h1>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Junte-se à nossa comunidade e comece a vender os artigos que já não usa. É grátis, fácil e bom para o planeta.
+            </p>
+            <div className="mt-8">
+              <Button asChild size="lg">
+                <Link href="/sell">Começar a Vender</Link>
+              </Button>
+            </div>
         </div>
       </section>
-      
-      {/* Nova estrutura com barra de filtros */}
+
+      {/* Grelha de Produtos */}
       <div className="container py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="md:col-span-1">
-          <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-            <FiltersSidebar />
-          </Suspense>
-        </div>
-        <div className="md:col-span-3">
+        <div className="md:col-span-4"> {/* Temporariamente a ocupar tudo, podemos readicionar filtros depois se quisermos */}
           <Suspense fallback={<ProductGridFallback/>}>
             <ProductGrid />
           </Suspense>
         </div>
       </div>
+
+      {/* Nova secção "Como Funciona" */}
+      <HowItWorks />
     </>
   );
 }

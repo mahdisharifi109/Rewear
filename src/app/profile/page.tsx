@@ -4,16 +4,14 @@ import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import ProductCard from '@/components/product-card';
 import { Separator } from '@/components/ui/separator';
 import { useProducts } from '@/context/product-context';
-import { Settings, Loader2 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import { Settings, Loader2, Package, Heart } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -28,13 +26,14 @@ export default function ProfilePage() {
         title: "Acesso Negado",
         description: "Precisa de iniciar sessão para aceder ao seu perfil.",
       });
-      router.push('/login');
+      router.push('/login?redirect=/profile');
     }
   }, [user, loading, router, toast]);
 
   const userProducts = useMemo(() => {
     if (!user) return [];
-    return products.filter(p => p.userId === user.uid);
+    // Mostra apenas os produtos que não foram vendidos
+    return products.filter(p => p.userId === user.uid && p.status !== 'vendido');
   }, [products, user]);
 
   const favoriteProducts = useMemo(() => {
@@ -44,71 +43,87 @@ export default function ProfilePage() {
 
   if (loading || productsLoading || !user) {
     return (
-        <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-            <p className="mt-2">A carregar perfil...</p>
+        <div className="container mx-auto flex min-h-[80vh] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
     );
   }
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-        <Card>
-            <CardHeader className="items-center text-center">
-                <Avatar className="mx-auto h-24 w-24 mb-4">
+    <div className="bg-muted/40">
+      <div className="container mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          
+          {/* Coluna Esquerda: Informações do Perfil */}
+          <div className="md:col-span-1">
+            <Card>
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <Avatar className="h-24 w-24 mb-4">
                     <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${user.name ?? 'V'}`} alt={user.name ?? 'Avatar do utilizador'} />
                     <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
-                <CardTitle className="text-3xl">{user.name}</CardTitle>
-                <CardDescription>{user.email}</CardDescription>
-            </CardHeader>
-             <CardFooter className="flex-col gap-2 pt-4 items-center">
-                <Button asChild className="w-full max-w-xs">
-                    <Link href="/sell">Vender um Artigo</Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full max-w-xs">
-                    <Link href="/settings">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Editar Perfil e Definições
-                    </Link>
-                </Button>
-            </CardFooter>
-            <CardContent className="mt-6">
-                <Separator />
-                <Tabs defaultValue="selling" className="mt-8">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="selling">À Venda ({userProducts.length})</TabsTrigger>
-                        <TabsTrigger value="favorites">Favoritos ({favoriteProducts.length})</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="selling" className="mt-6">
-                        {userProducts.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                {userProducts.map(product => (
-                                    <ProductCard key={product.id} product={product} />
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-muted-foreground text-center py-8">
-                                Ainda não tem artigos à venda.
-                            </p>
-                        )}
-                    </TabsContent>
-                    <TabsContent value="favorites" className="mt-6">
-                         {favoriteProducts.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                {favoriteProducts.map(product => (
-                                    <ProductCard key={product.id} product={product} />
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-muted-foreground text-center py-8">
-                                Ainda não guardou nenhum artigo nos favoritos.
-                            </p>
-                        )}
-                    </TabsContent>
-                </Tabs>
-            </CardContent>
-        </Card>
+                <h2 className="text-2xl font-bold">{user.name}</h2>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
+                <Separator className="my-4" />
+                <div className="w-full space-y-2">
+                    <Button asChild className="w-full">
+                        <Link href="/sell">Vender um Artigo</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
+                        <Link href="/settings">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Definições
+                        </Link>
+                    </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Coluna Direita: Artigos e Favoritos */}
+          <div className="md:col-span-3 space-y-10">
+            {/* Secção de Artigos à Venda */}
+            <div>
+                <div className="flex items-center gap-2 mb-6">
+                    <Package className="h-6 w-6" />
+                    <h2 className="text-2xl font-bold">À Venda ({userProducts.length})</h2>
+                </div>
+                {userProducts.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {userProducts.map(product => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-muted-foreground text-center py-8">
+                        Ainda não tem artigos à venda.
+                    </p>
+                )}
+            </div>
+            
+            <Separator />
+            
+            {/* Secção de Favoritos */}
+            <div>
+                <div className="flex items-center gap-2 mb-6">
+                    <Heart className="h-6 w-6" />
+                    <h2 className="text-2xl font-bold">Favoritos ({favoriteProducts.length})</h2>
+                </div>
+                 {favoriteProducts.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {favoriteProducts.map(product => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-muted-foreground text-center py-8">
+                        Ainda não guardou nenhum artigo nos favoritos.
+                    </p>
+                )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

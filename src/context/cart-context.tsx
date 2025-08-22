@@ -3,6 +3,8 @@
 import type { CartItem, Product, AddToCartPayload } from '@/lib/types';
 import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 
+const VERIFICATION_FEE = 5.00; // Taxa de verificação de 5€
+
 interface CartContextType {
   cartItems: CartItem[];
   addToCart: (payload: AddToCartPayload) => void;
@@ -11,12 +13,17 @@ interface CartContextType {
   clearCart: () => void;
   cartCount: number;
   subtotal: number;
+  verificationFee: number; // NOVO
+  total: number; // NOVO
+  isVerificationEnabled: boolean; // NOVO
+  toggleVerification: () => void; // NOVA FUNÇÃO
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isVerificationEnabled, setIsVerificationEnabled] = useState(false); // NOVO ESTADO
 
   const addToCart = useCallback(({ product, quantity, size }: AddToCartPayload) => {
     setCartItems(prevItems => {
@@ -52,7 +59,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setCartItems([]);
+    setIsVerificationEnabled(false); // Resetar ao limpar
   };
+
+  const toggleVerification = useCallback(() => {
+    setIsVerificationEnabled(prev => !prev);
+  }, []);
 
   const cartCount = useMemo(() => {
     return cartItems.reduce((count, item) => count + item.quantity, 0);
@@ -62,6 +74,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
   }, [cartItems]);
 
+  const verificationFee = useMemo(() => {
+    return isVerificationEnabled ? VERIFICATION_FEE : 0;
+  }, [isVerificationEnabled]);
+  
+  const total = useMemo(() => {
+      return subtotal + verificationFee;
+  }, [subtotal, verificationFee]);
+
   const value = useMemo(() => ({
     cartItems,
     addToCart,
@@ -70,7 +90,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     clearCart,
     cartCount,
     subtotal,
-  }), [cartItems, addToCart, removeFromCart, updateItemQuantity, cartCount, subtotal]);
+    verificationFee,
+    total,
+    isVerificationEnabled,
+    toggleVerification,
+  }), [cartItems, addToCart, removeFromCart, updateItemQuantity, cartCount, subtotal, verificationFee, total, isVerificationEnabled, toggleVerification]);
 
   return (
     <CartContext.Provider value={value}>

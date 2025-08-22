@@ -29,16 +29,15 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      // 1. Criar o utilizador no Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
-      // 2. Criar um documento para o utilizador no Firestore
-      // A CORREÇÃO ESTÁ AQUI: Adicionamos o campo 'favorites' vazio
+      // Adicionar o novo utilizador ao Firestore com a carteira a 0
       await setDoc(doc(db, "users", user.uid), {
         username: data.username,
         email: data.email,
-        favorites: [], // Garante que a lista de favoritos existe desde o início
+        favorites: [],
+        walletBalance: 0, // INICIALIZAR CARTEIRA
       });
 
       toast({

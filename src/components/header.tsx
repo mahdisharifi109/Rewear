@@ -3,7 +3,7 @@
 import React, { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package2, ShoppingCart, ChevronDown, User, Menu, Bell } from "lucide-react";
+import { Package2, ShoppingCart, ChevronDown, User, Menu, Bell, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/cart-context";
@@ -24,13 +24,9 @@ import { SearchBar } from "./search-bar";
 import { Skeleton } from "./ui/skeleton";
 import { SideCart } from "./side-cart";
 
-// Imports para as notificações
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch } from "firebase/firestore";
 import type { Notification } from "@/lib/types";
-import { formatDistanceToNow } from 'date-fns';
-import { pt } from 'date-fns/locale';
-
 
 const categories = ["Roupa", "Calçado", "Livros", "Eletrónica", "Outro"];
 
@@ -38,7 +34,6 @@ function SearchBarFallback() {
   return <Skeleton className="hidden sm:block h-10 w-full max-w-xs" />;
 }
 
-// --- NOVO COMPONENTE PARA AS NOTIFICAÇÕES ---
 function NotificationBell() {
     const { user } = useAuth();
     const router = useRouter();
@@ -123,7 +118,6 @@ function NotificationBell() {
     )
 }
 
-
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
@@ -133,10 +127,19 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isCartAnimating, setIsCartAnimating] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (cartCount > 0) {
+      setIsCartAnimating(true);
+      const timer = setTimeout(() => setIsCartAnimating(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCount]);
 
   const handleLogout = () => {
     logout();
@@ -178,16 +181,21 @@ export function Header() {
           <span className="font-bold text-lg">SecondWave</span>
         </Link>
 
+        {/* --- SECÇÃO MODIFICADA --- */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 focus:outline-none transition-colors hover:text-foreground text-foreground/60">
-              Categorias
+            <DropdownMenuTrigger className="flex items-center gap-1 focus:outline-none transition-colors text-foreground/60 hover:text-foreground">
+              Catálogo
               <ChevronDown className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link href="/catalog">Todos os Artigos</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               {categories.map((category) => (
                 <DropdownMenuItem key={category} asChild>
-                  <Link href={`/?category=${category}`}>{category}</Link>
+                  <Link href={`/catalog?category=${category}`}>{category}</Link>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -196,6 +204,7 @@ export function Header() {
           <NavLink href="/faq">FAQ</NavLink>
           <NavLink href="/contact">Contacto</NavLink>
         </nav>
+        {/* --- FIM DA SECÇÃO MODIFICADA --- */}
         
         <div className="flex flex-1 items-center justify-end gap-1 md:gap-2 ml-auto">
           <Suspense fallback={<SearchBarFallback />}>
@@ -216,6 +225,8 @@ export function Header() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild><Link href="/profile">Perfil</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link href="/dashboard">Dashboard</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link href="/wallet">Carteira</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link href="/favorites">Favoritos</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link href="/settings">Definições</Link></DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>Terminar Sessão</DropdownMenuItem>
@@ -230,9 +241,18 @@ export function Header() {
             <Button variant="outline" asChild><Link href="/sell" onClick={handleSellClick}>Vender</Link></Button>
           </div>
 
+          {isMounted && user && (
+            <Button variant="ghost" size="icon" asChild>
+                <Link href="/favorites">
+                    <Heart className="h-5 w-5" />
+                    <span className="sr-only">Favoritos</span>
+                </Link>
+            </Button>
+          )}
+
           {isMounted && user && <NotificationBell />}
 
-          <Button variant="ghost" size="icon" className="relative" onClick={() => setIsCartOpen(true)}>
+          <Button variant="ghost" size="icon" className={cn("relative", isCartAnimating && "animate-bounce")} onClick={() => setIsCartOpen(true)}>
             <ShoppingCart className="h-5 w-5" />
             {cartCount > 0 && (
               <Badge variant="default" className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-1 text-xs">{cartCount}</Badge>
@@ -253,6 +273,8 @@ export function Header() {
                             </div>
                             <MobileNavLink href="/profile">Perfil</MobileNavLink>
                             <MobileNavLink href="/dashboard">Dashboard</MobileNavLink>
+                            <MobileNavLink href="/wallet">Carteira</MobileNavLink>
+                            <MobileNavLink href="/favorites">Favoritos</MobileNavLink>
                             <MobileNavLink href="/settings">Definições</MobileNavLink>
                         </>
                     ): (
@@ -263,6 +285,7 @@ export function Header() {
                     )}
                     <MobileNavLink href="/sell">Vender</MobileNavLink>
                     <Separator />
+                    <MobileNavLink href="/catalog">Catálogo</MobileNavLink>
                     <MobileNavLink href="/about">Sobre</MobileNavLink>
                     <MobileNavLink href="/faq">FAQ</MobileNavLink>
                     <MobileNavLink href="/contact">Contacto</MobileNavLink>

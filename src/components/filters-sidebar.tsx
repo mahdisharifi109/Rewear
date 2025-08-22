@@ -8,7 +8,10 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCallback, useState, useEffect } from 'react';
 
+// Listas de opções para os novos filtros
 const conditions = ["Novo", "Muito bom", "Bom"];
+const brands = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac", "Outro"];
+const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
 export function FiltersSidebar() {
   const router = useRouter();
@@ -18,16 +21,25 @@ export function FiltersSidebar() {
   // Estados para controlar os valores dos filtros
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]); // Novo estado para marcas
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);   // Novo estado para tamanhos
 
-  // Efeito para carregar os filtros a partir da URL quando a página carrega
+  // Efeito para carregar os filtros a partir da URL
   useEffect(() => {
     const conditionsFromUrl = searchParams.get('conditions')?.split(',') || [];
-    setSelectedConditions(conditionsFromUrl);
+    const brandsFromUrl = searchParams.get('brands')?.split(',') || [];
+    const sizesFromUrl = searchParams.get('sizes')?.split(',') || [];
+    
+    setSelectedConditions(conditionsFromUrl.filter(Boolean));
+    setSelectedBrands(brandsFromUrl.filter(Boolean));
+    setSelectedSizes(sizesFromUrl.filter(Boolean));
 
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     if (minPrice && maxPrice) {
       setPriceRange([Number(minPrice), Number(maxPrice)]);
+    } else {
+      setPriceRange([0, 500]);
     }
   }, [searchParams]);
 
@@ -36,7 +48,7 @@ export function FiltersSidebar() {
     (paramsToUpdate: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
       for (const [name, value] of Object.entries(paramsToUpdate)) {
-        if (value) {
+        if (value && value.length > 0) {
           params.set(name, value);
         } else {
           params.delete(name);
@@ -47,25 +59,34 @@ export function FiltersSidebar() {
     [searchParams]
   );
 
-  const handleConditionChange = (condition: string, checked: boolean) => {
-    const newConditions = checked
-      ? [...selectedConditions, condition]
-      : selectedConditions.filter(c => c !== condition);
-    setSelectedConditions(newConditions);
-    router.push(pathname + '?' + createQueryString({ conditions: newConditions.length > 0 ? newConditions.join(',') : null }));
+  // Função genérica para lidar com a mudança nos checkboxes
+  const handleCheckboxChange = (
+    value: string, 
+    checked: boolean, 
+    currentValues: string[], 
+    setter: React.Dispatch<React.SetStateAction<string[]>>,
+    paramName: string
+  ) => {
+    const newValues = checked
+      ? [...currentValues, value]
+      : currentValues.filter(v => v !== value);
+    setter(newValues);
+    router.push(pathname + '?' + createQueryString({ [paramName]: newValues.join(',') }));
   };
+
 
   const handlePriceChange = (newRange: [number, number]) => {
     setPriceRange(newRange);
   };
   
   const applyPriceFilter = () => {
-      router.push(pathname + '?' + createQueryString({ minPrice: String(priceRange[0]), maxPrice: String(priceRange[1]) }));
+      router.push(pathname + '?' + createQueryString({ 
+          minPrice: String(priceRange[0]), 
+          maxPrice: String(priceRange[1] === 1000 ? Infinity : priceRange[1]) 
+      }));
   };
 
   const clearFilters = () => {
-    setSelectedConditions([]);
-    setPriceRange([0, 500]);
     router.push(pathname);
   }
 
@@ -86,9 +107,43 @@ export function FiltersSidebar() {
           />
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>{priceRange[0]}€</span>
-            <span>{priceRange[1]}€</span>
+            <span>{priceRange[1] === 1000 ? '1000€+' : `${priceRange[1]}€`}</span>
           </div>
           <Button onClick={applyPriceFilter} size="sm" className="w-full">Aplicar Preço</Button>
+        </div>
+
+        {/* Filtro de Marca */}
+        <div className="space-y-2">
+          <Label>Marca</Label>
+          <div className="space-y-2">
+            {brands.map(brand => (
+              <div key={brand} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`brand-${brand}`}
+                  checked={selectedBrands.includes(brand)}
+                  onCheckedChange={(checked) => handleCheckboxChange(brand, !!checked, selectedBrands, setSelectedBrands, 'brands')}
+                />
+                <Label htmlFor={`brand-${brand}`} className="font-normal">{brand}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Filtro de Tamanho */}
+        <div className="space-y-2">
+          <Label>Tamanho</Label>
+          <div className="space-y-2">
+            {sizes.map(size => (
+              <div key={size} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`size-${size}`}
+                  checked={selectedSizes.includes(size)}
+                  onCheckedChange={(checked) => handleCheckboxChange(size, !!checked, selectedSizes, setSelectedSizes, 'sizes')}
+                />
+                <Label htmlFor={`size-${size}`} className="font-normal">{size}</Label>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Filtro de Condição */}
@@ -100,7 +155,7 @@ export function FiltersSidebar() {
                 <Checkbox
                   id={`condition-${condition}`}
                   checked={selectedConditions.includes(condition)}
-                  onCheckedChange={(checked) => handleConditionChange(condition, !!checked)}
+                  onCheckedChange={(checked) => handleCheckboxChange(condition, !!checked, selectedConditions, setSelectedConditions, 'conditions')}
                 />
                 <Label htmlFor={`condition-${condition}`} className="font-normal">{condition}</Label>
               </div>
