@@ -31,16 +31,7 @@ export function SellForm() {
   const { control, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm<SellFormValues>({
     resolver: zodResolver(sellFormSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      price: undefined,
-      quantity: 1,
-      category: "",
-      condition: "",
-      brand: "",
-      material: "",
-      sizes: "",
-      images: [],
+      title: "", description: "", price: undefined, quantity: 1, category: "", condition: "", brand: "", material: "", sizes: "", images: [],
     },
   });
 
@@ -86,20 +77,9 @@ export function SellForm() {
         const sizesArray = data.sizes ? data.sizes.split(',').map(s => s.trim().toUpperCase()) : [];
 
         await addProduct({
-          name: data.title,
-          description: data.description,
-          price: data.price,
-          quantity: data.quantity,
-          category: data.category as any,
-          condition: data.condition as any,
-          brand: data.brand,
-          material: data.material,
-          sizes: sizesArray,
-          imageUrls: imageUrls,
-          imageHint: data.title.split(" ").slice(0, 2).join(" "),
-          userEmail: user.email!,
-          userName: user.name,
-          userId: user.uid,
+          name: data.title, description: data.description, price: data.price, quantity: data.quantity, category: data.category as any,
+          condition: data.condition as any, brand: data.brand, material: data.material, sizes: sizesArray, imageUrls: imageUrls,
+          imageHint: data.title.split(" ").slice(0, 2).join(" "), userEmail: user.email!, userName: user.name, userId: user.uid,
         });
 
         toast({ title: "Anúncio Publicado!", description: "O seu produto foi listado com sucesso!" });
@@ -176,12 +156,12 @@ export function SellForm() {
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="brand">Marca*</Label>
-                        <Controller name="brand" control={control} render={({ field }) => <SelectOrInput options={PREDEFINED_BRANDS} placeholder="Selecione ou escreva uma marca" {...field} />} />
+                        <Controller name="brand" control={control} render={({ field }) => <SelectOrInput id="brand" options={PREDEFINED_BRANDS} placeholder="Selecione ou escreva uma marca" {...field} />} />
                         {errors.brand && <p className="text-sm text-destructive">{errors.brand.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="material">Material*</Label>
-                        <Controller name="material" control={control} render={({ field }) => <SelectOrInput options={PREDEFINED_MATERIALS} placeholder="Selecione ou escreva um material" {...field} />} />
+                        <Controller name="material" control={control} render={({ field }) => <SelectOrInput id="material" options={PREDEFINED_MATERIALS} placeholder="Selecione ou escreva um material" {...field} />} />
                         {errors.material && <p className="text-sm text-destructive">{errors.material.message}</p>}
                     </div>
                  </div>
@@ -192,7 +172,7 @@ export function SellForm() {
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="category">Categoria</Label>
+                        <Label>Categoria</Label>
                          <Controller name="category" control={control} render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger>
@@ -208,7 +188,7 @@ export function SellForm() {
                         {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="condition">Condição</Label>
+                        <Label>Condição</Label>
                          <Controller name="condition" control={control} render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger><SelectValue placeholder="Selecione a condição" /></SelectTrigger>

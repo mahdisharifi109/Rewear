@@ -36,16 +36,9 @@ export function EditForm({ product }: EditFormProps) {
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<EditFormValues>({
     resolver: zodResolver(editFormSchema),
     defaultValues: {
-      title: product.name || "",
-      description: product.description || "",
-      price: product.price ?? undefined,
-      quantity: product.quantity || 1,
-      category: product.category || "",
-      condition: product.condition || "",
-      brand: product.brand || "",
-      material: product.material || "",
-      sizes: product.sizes?.join(', ') || "",
-      images: product.imageUrls || [],
+      title: product.name || "", description: product.description || "", price: product.price ?? undefined, quantity: product.quantity || 1,
+      category: product.category || "", condition: product.condition || "", brand: product.brand || "", material: product.material || "",
+      sizes: product.sizes?.join(', ') || "", images: product.imageUrls || [],
     },
   });
 
@@ -83,29 +76,14 @@ export function EditForm({ product }: EditFormProps) {
                 return fileToDataUri(image as File);
             })
         );
-
         const sizesArray = data.sizes ? data.sizes.split(',').map(s => s.trim().toUpperCase()) : [];
-
         const productData: Product = {
-          id: product.id,
-          name: data.title,
-          description: data.description,
-          price: data.price,
-          quantity: data.quantity,
-          category: data.category as any,
-          condition: data.condition as any,
-          brand: data.brand || "",
-          material: data.material || "",
-          sizes: sizesArray,
-          imageUrls: imageUrls,
-          imageHint: data.title.split(" ").slice(0, 2).join(" "),
-          userEmail: product.userEmail,
-          userName: product.userName || user?.name || 'Vendedor Desconhecido',
-          userId: product.userId,
+          id: product.id, name: data.title, description: data.description, price: data.price, quantity: data.quantity, category: data.category as any,
+          condition: data.condition as any, brand: data.brand || "", material: data.material || "", sizes: sizesArray, imageUrls: imageUrls,
+          imageHint: data.title.split(" ").slice(0, 2).join(" "), userEmail: product.userEmail,
+          userName: product.userName || user?.name || 'Vendedor Desconhecido', userId: product.userId,
         };
-
         await updateProduct(productData);
-
         toast({ title: "Anúncio Atualizado!", description: "O seu produto foi atualizado com sucesso!" });
         router.push(`/product/${product.id}`);
     } catch (error) {
@@ -163,13 +141,11 @@ export function EditForm({ product }: EditFormProps) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="price">Preço (€)</Label>
-                        {/* CORREÇÃO AQUI */}
                         <Controller name="price" control={control} render={({ field }) => <Input id="price" type="number" step="0.01" {...field} value={field.value ?? ''} />} />
                         {errors.price && <p className="text-sm text-destructive">{errors.price.message}</p>}
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="quantity">Quantidade</Label>
-                        {/* CORREÇÃO AQUI */}
                         <Controller name="quantity" control={control} render={({ field }) => <Input id="quantity" type="number" step="1" {...field} value={field.value ?? ''} />} />
                         {errors.quantity && <p className="text-sm text-destructive">{errors.quantity.message}</p>}
                     </div>
@@ -177,24 +153,23 @@ export function EditForm({ product }: EditFormProps) {
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="brand">Marca*</Label>
-                        <Controller name="brand" control={control} render={({ field }) => <SelectOrInput options={PREDEFINED_BRANDS} placeholder="Selecione ou escreva uma marca" {...field} />} />
+                        <Controller name="brand" control={control} render={({ field }) => <SelectOrInput id="brand" options={PREDEFINED_BRANDS} placeholder="Selecione ou escreva uma marca" {...field} />} />
                         {errors.brand && <p className="text-sm text-destructive">{errors.brand.message}</p>}
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="material">Material*</Label>
-                        <Controller name="material" control={control} render={({ field }) => <SelectOrInput options={PREDEFINED_MATERIALS} placeholder="Selecione ou escreva um material" {...field} />} />
+                        <Controller name="material" control={control} render={({ field }) => <SelectOrInput id="material" options={PREDEFINED_MATERIALS} placeholder="Selecione ou escreva um material" {...field} />} />
                         {errors.material && <p className="text-sm text-destructive">{errors.material.message}</p>}
                     </div>
                  </div>
                  <div className="space-y-2">
                     <Label htmlFor="sizes">Tamanhos* (separados por vírgula)</Label>
-                    {/* CORREÇÃO AQUI */}
                     <Controller name="sizes" control={control} render={({ field }) => <Input id="sizes" placeholder="S, M, L, XL" {...field} value={field.value ?? ''} />} />
                     {errors.sizes && <p className="text-sm text-destructive">{errors.sizes.message}</p>}
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label htmlFor="category">Categoria</Label>
+                        <Label>Categoria</Label>
                          <Controller name="category" control={control} render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -210,7 +185,7 @@ export function EditForm({ product }: EditFormProps) {
                         {errors.category && <p className="text-sm text-destructive">{errors.category.message}</p>}
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="condition">Condição</Label>
+                        <Label>Condição</Label>
                          <Controller name="condition" control={control} render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger><SelectValue /></SelectTrigger>

@@ -82,7 +82,7 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
     <section id="products">
       <div className="mb-8">
         <h2 className="text-3xl font-bold tracking-tight">
-          {personalized ? "Recomendado para Si" : (hasActiveFilters ? "Resultados" : "Descubra os Nossos Produtos")}
+          {personalized ? "Recomendado para Si" : (hasActiveFilters ? "Resultados da Pesquisa" : "Descubra os Nossos Produtos")}
         </h2>
         <p className="text-muted-foreground mt-2">{filteredProducts.length} resultado(s) encontrado(s)</p>
       </div>
