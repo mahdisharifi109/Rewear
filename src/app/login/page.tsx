@@ -1,3 +1,5 @@
+// Ficheiro: src/app/login/page.tsx
+
 "use client";
 
 import Link from "next/link";
@@ -39,8 +41,11 @@ export default function LoginPage() {
         console.error("Erro no login:", error);
         let description = "Ocorreu um erro. Por favor, tente novamente.";
         
+        // Mensagens de erro mais específicas
         if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
             description = "O email ou a palavra-passe estão incorretos.";
+        } else if (error.code === 'auth/too-many-requests') {
+            description = "Acesso temporariamente bloqueado devido a demasiadas tentativas. Tente novamente mais tarde.";
         }
         
         toast({

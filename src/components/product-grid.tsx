@@ -1,6 +1,8 @@
+// Ficheiro: src/components/product-grid.tsx (Corrigido)
+
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/product-card";
@@ -8,6 +10,16 @@ import { useProducts } from "@/context/product-context";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Loader2 } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
+
+// Componente de Skeleton para o ProductCard
+const ProductCardSkeleton = () => (
+  <div className="space-y-2">
+    <Skeleton className="h-[250px] w-full rounded-lg" />
+    <Skeleton className="h-5 w-3/4" />
+    <Skeleton className="h-5 w-1/2" />
+  </div>
+);
 
 interface ProductGridProps {
   personalized?: boolean;
@@ -18,42 +30,43 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
   const { products, loadMoreProducts, hasMoreProducts, loading: initialLoading } = useProducts();
   const { user } = useAuth();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observer = useRef<IntersectionObserver>();
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMoreProducts) return;
     setIsLoadingMore(true);
     await loadMoreProducts();
     setIsLoadingMore(false);
-  };
+  }, [isLoadingMore, hasMoreProducts, loadMoreProducts]);
+
+  // Observer para o scroll infinito
+  const lastProductElementRef = useCallback((node: HTMLDivElement) => { // <-- A CORREÇÃO ESTÁ AQUI
+    if (isLoadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMoreProducts) {
+        handleLoadMore();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isLoadingMore, hasMoreProducts, handleLoadMore]);
 
   const filteredProducts = useMemo(() => {
-    // Lógica para o feed personalizado "Para Ti"
     if (personalized && user) {
         const { preferredBrands = [], preferredSizes = [] } = user;
-
-        if (preferredBrands.length === 0 && preferredSizes.length === 0) {
-            return []; // Retorna vazio se não houver preferências
-        }
-        
-        // Lógica de pontuação melhorada
+        if (preferredBrands.length === 0 && preferredSizes.length === 0) return [];
         return products
-            .filter(p => p.status !== 'vendido' && p.userId !== user.uid) // Não mostrar os próprios produtos
+            .filter(p => p.status !== 'vendido' && p.userId !== user.uid)
             .map(product => {
                 let score = 0;
-                // Atribui 2 pontos se a marca corresponder (mais importante)
-                if (product.brand && preferredBrands.includes(product.brand)) {
-                    score += 2;
-                }
-                // Atribui 1 ponto se o tamanho corresponder
-                if (product.sizes?.some(size => preferredSizes.includes(size))) {
-                    score += 1;
-                }
+                if (product.brand && preferredBrands.includes(product.brand)) score += 2;
+                if (product.sizes?.some(size => preferredSizes.includes(size))) score += 1;
                 return { ...product, score };
             })
-            .filter(p => p.score > 0) // Apenas produtos que correspondem a algo
-            .sort((a, b) => b.score - a.score); // Ordenar por pontuação (mais relevante primeiro)
+            .filter(p => p.score > 0)
+            .sort((a, b) => b.score - a.score);
     }
 
-    // Lógica de filtros normal para a página "Explorar" e "Pesquisa"
     const searchQuery = searchParams.get("q")?.toLowerCase() || "";
     const categoryQuery = searchParams.get("category")?.toLowerCase() || "";
     const minPrice = Number(searchParams.get("minPrice")) || 0;
@@ -61,7 +74,7 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
     const conditions = searchParams.get("conditions")?.split(',').filter(Boolean) || [];
     const brands = searchParams.get("brands")?.split(',').filter(Boolean) || [];
     const sizes = searchParams.get("sizes")?.split(',').filter(Boolean) || [];
-
+    
     let filtered = products.filter(p => p.status !== 'vendido');
 
     if (searchQuery) filtered = filtered.filter(p => p.name.toLowerCase().includes(searchQuery) || p.description.toLowerCase().includes(searchQuery));
@@ -70,13 +83,12 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
     if (conditions.length > 0) filtered = filtered.filter(p => conditions.includes(p.condition));
     if (brands.length > 0) filtered = filtered.filter(p => p.brand && brands.includes(p.brand));
     if (sizes.length > 0) filtered = filtered.filter(p => p.sizes && p.sizes.some(size => sizes.includes(size)));
-
+    
     return filtered;
   }, [searchParams, products, personalized, user]);
   
-  // Apenas mostra o botão "Carregar Mais" se não estivermos a filtrar/pesquisar
   const hasActiveFilters = searchParams.toString().length > 0;
-  const showLoadMoreButton = !personalized && hasMoreProducts && !hasActiveFilters;
+  const showLoadMore = !personalized && hasMoreProducts && !hasActiveFilters;
 
   return (
     <section id="products">
@@ -88,19 +100,22 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
       </div>
 
       {initialLoading ? (
-        <div className="text-center py-16"><Loader2 className="h-8 w-8 animate-spin mx-auto" /></div>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+        </div>
       ) : filteredProducts.length > 0 ? (
         <>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {filteredProducts.map((product, index) => {
+              if (filteredProducts.length === index + 1 && showLoadMore) {
+                return <div ref={lastProductElementRef} key={product.id}><ProductCard product={product} /></div>
+              }
+              return <ProductCard key={product.id} product={product} />
+            })}
           </div>
-          {showLoadMoreButton && (
-            <div className="mt-10 text-center">
-              <Button onClick={handleLoadMore} disabled={isLoadingMore}>
-                {isLoadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Carregar Mais"}
-              </Button>
+          {isLoadingMore && (
+            <div className="text-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
             </div>
           )}
         </>

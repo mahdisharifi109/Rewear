@@ -1,7 +1,9 @@
-// src/lib/firebase.ts
+// Ficheiro: src/lib/firebase.ts
+
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage'; // Adicionado o import do Storage
 
 // As tuas credenciais do Firebase a partir de variáveis de ambiente
 const firebaseConfig = {
@@ -18,5 +20,6 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app); // Inicializa e exporta o Storage
 
-export { app, db, auth };
+export { app, db, auth, storage }; // Exporta o storage
