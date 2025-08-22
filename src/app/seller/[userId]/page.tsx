@@ -18,9 +18,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { StarRating } from '@/components/ui/star-rating';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardHeader } from '@/components/ui/card'; // Importações em falta adicionadas
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Importações em falta adicionadas
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Seller {
     username: string;
@@ -51,6 +50,7 @@ function LeaveReviewForm({ sellerId, onReviewAdded }: { sellerId: string, onRevi
 
         setIsSubmitting(true);
         try {
+            // Adicionar a avaliação
             await addDoc(collection(db, 'reviews'), {
                 sellerId: sellerId,
                 buyerId: user.uid,
@@ -59,6 +59,16 @@ function LeaveReviewForm({ sellerId, onReviewAdded }: { sellerId: string, onRevi
                 comment: data.comment,
                 createdAt: serverTimestamp()
             });
+
+            // Adicionar notificação para o vendedor
+            await addDoc(collection(db, "notifications"), {
+                userId: sellerId, // Notificação é para o vendedor
+                message: `${user.name} deixou-lhe uma avaliação de ${data.rating} estrela(s).`,
+                link: `/seller/${sellerId}`, // Link para a página do vendedor
+                read: false,
+                createdAt: serverTimestamp()
+            });
+
             toast({ title: 'Sucesso', description: 'A sua avaliação foi publicada!' });
             reset({ rating: 0, comment: '' });
             setRating(0);

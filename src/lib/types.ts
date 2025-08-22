@@ -1,5 +1,15 @@
 import { Timestamp } from "firebase/firestore";
 
+// Adicionar este novo tipo ao ficheiro
+export type Notification = {
+  id: string;
+  userId: string; // ID do utilizador que recebe a notificação
+  message: string;
+  link: string; // Link para onde o utilizador será levado ao clicar
+  read: boolean;
+  createdAt: Timestamp;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -17,6 +27,7 @@ export type Product = {
   sizes?: string[];
   brand?: string;
   material?: string;
+  status?: 'disponível' | 'vendido';
 };
 
 export interface AddToCartPayload {
@@ -25,7 +36,7 @@ export interface AddToCartPayload {
   size?: string;
 }
 
-// A CORREÇÃO ESTAVA AQUI
+// A CORREÇÃO ESTÁ AQUI
 export type CartItem = AddToCartPayload & {
   id: string; 
 };

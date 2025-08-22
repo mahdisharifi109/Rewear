@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, Suspense, useEffect } from "react"; // Adicionado useEffect
+import React, { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package2, ShoppingCart, ChevronDown, User, Menu } from "lucide-react";
+import { Package2, ShoppingCart, ChevronDown, User, Menu, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/cart-context";
@@ -13,21 +13,116 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { SearchBar } from "./search-bar"; 
+import { SearchBar } from "./search-bar";
 import { Skeleton } from "./ui/skeleton";
 import { SideCart } from "./side-cart";
+
+// Imports para as notificações
+import { db } from "@/lib/firebase";
+import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch } from "firebase/firestore";
+import type { Notification } from "@/lib/types";
+import { formatDistanceToNow } from 'date-fns';
+import { pt } from 'date-fns/locale';
+
 
 const categories = ["Roupa", "Calçado", "Livros", "Eletrónica", "Outro"];
 
 function SearchBarFallback() {
   return <Skeleton className="hidden sm:block h-10 w-full max-w-xs" />;
 }
+
+// --- NOVO COMPONENTE PARA AS NOTIFICAÇÕES ---
+function NotificationBell() {
+    const { user } = useAuth();
+    const router = useRouter();
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        if (!user) {
+            setNotifications([]);
+            setUnreadCount(0);
+            return;
+        }
+
+        const notificationsQuery = query(
+            collection(db, "notifications"),
+            where("userId", "==", user.uid),
+            orderBy("createdAt", "desc")
+        );
+
+        const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
+            const userNotifications = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            })) as Notification[];
+            
+            setNotifications(userNotifications);
+            const newUnreadCount = userNotifications.filter(n => !n.read).length;
+            setUnreadCount(newUnreadCount);
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
+    const handleMarkAllAsRead = async () => {
+        if (!user || unreadCount === 0) return;
+        const batch = writeBatch(db);
+        notifications.forEach(notification => {
+            if (!notification.read) {
+                const notifRef = doc(db, "notifications", notification.id);
+                batch.update(notifRef, { read: true });
+            }
+        });
+        await batch.commit();
+    };
+
+    const handleNotificationClick = async (notification: Notification) => {
+        if (!notification.read) {
+            await updateDoc(doc(db, "notifications", notification.id), { read: true });
+        }
+        router.push(notification.link);
+    }
+    
+    return (
+        <DropdownMenu onOpenChange={(open) => { if(open) handleMarkAllAsRead() }}>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                        <Badge variant="destructive" className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-1 text-xs">
+                            {unreadCount}
+                        </Badge>
+                    )}
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel>Notificações</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {notifications.length > 0 ? (
+                    notifications.slice(0, 5).map(notification => (
+                        <DropdownMenuItem key={notification.id} onSelect={() => handleNotificationClick(notification)} className={cn("cursor-pointer whitespace-normal", !notification.read && "bg-accent")}>
+                           <div className="flex items-start gap-2">
+                             {!notification.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5" />}
+                             <p className="flex-1">{notification.message}</p>
+                           </div>
+                        </DropdownMenuItem>
+                    ))
+                ) : (
+                    <p className="p-2 text-sm text-muted-foreground">Não tem notificações.</p>
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
+
 
 export function Header() {
   const router = useRouter();
@@ -37,14 +132,11 @@ export function Header() {
   const { toast } = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-
-  // --- INÍCIO DA CORREÇÃO ---
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
-  // --- FIM DA CORREÇÃO ---
 
   const handleLogout = () => {
     logout();
@@ -105,18 +197,15 @@ export function Header() {
           <NavLink href="/contact">Contacto</NavLink>
         </nav>
         
-        <div className="flex flex-1 items-center justify-end gap-2 md:gap-4 ml-auto">
+        <div className="flex flex-1 items-center justify-end gap-1 md:gap-2 ml-auto">
           <Suspense fallback={<SearchBarFallback />}>
             <SearchBar />
           </Suspense>
         
           <div className="hidden md:flex items-center gap-2">
-            {/* --- INÍCIO DA CORREÇÃO --- */}
-            {/* Só mostramos os botões depois de o componente estar "montado" no navegador */}
             {!isMounted ? (
               <Skeleton className="h-10 w-24" />
             ) : user ? (
-            // --- FIM DA CORREÇÃO --- */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost">
@@ -126,6 +215,7 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild><Link href="/profile">Perfil</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link href="/dashboard">Dashboard</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link href="/settings">Definições</Link></DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>Terminar Sessão</DropdownMenuItem>
@@ -133,26 +223,19 @@ export function Header() {
               </DropdownMenu>
             ) : (
               <>
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Iniciar Sessão</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/register">Registar</Link>
-                </Button>
+                <Button variant="ghost" asChild><Link href="/login">Iniciar Sessão</Link></Button>
+                <Button asChild><Link href="/register">Registar</Link></Button>
               </>
             )}
-
-            <Button variant="outline" asChild>
-              <Link href="/sell" onClick={handleSellClick}>Vender</Link>
-            </Button>
+            <Button variant="outline" asChild><Link href="/sell" onClick={handleSellClick}>Vender</Link></Button>
           </div>
+
+          {isMounted && user && <NotificationBell />}
 
           <Button variant="ghost" size="icon" className="relative" onClick={() => setIsCartOpen(true)}>
             <ShoppingCart className="h-5 w-5" />
             {cartCount > 0 && (
-              <Badge variant="default" className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-1 text-xs">
-                {cartCount}
-              </Badge>
+              <Badge variant="default" className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-1 text-xs">{cartCount}</Badge>
             )}
             <span className="sr-only">Abrir carrinho</span>
           </Button>
@@ -160,23 +243,16 @@ export function Header() {
           {isMounted && <SideCart open={isCartOpen} onOpenChange={setIsCartOpen} />}
 
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-            <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu className="h-6 w-6" />
-                    <span className="sr-only">Abrir menu</span>
-                </Button>
-            </SheetTrigger>
+            <SheetTrigger asChild><Button variant="ghost" size="icon" className="md:hidden"><Menu className="h-6 w-6" /><span className="sr-only">Abrir menu</span></Button></SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                  <nav className="flex flex-col gap-4 mt-8">
-                    {/* --- INÍCIO DA CORREÇÃO --- */}
                     {!isMounted ? <Skeleton className="h-8 w-32" /> : user ? (
-                    // --- FIM DA CORREÇÃO --- */}
                         <>
                             <div className="flex items-center gap-2 border-b pb-4">
-                                <User className="h-6 w-6" />
-                                <span className="font-semibold">{user.name}</span>
+                                <User className="h-6 w-6" /><span className="font-semibold">{user.name}</span>
                             </div>
                             <MobileNavLink href="/profile">Perfil</MobileNavLink>
+                            <MobileNavLink href="/dashboard">Dashboard</MobileNavLink>
                             <MobileNavLink href="/settings">Definições</MobileNavLink>
                         </>
                     ): (

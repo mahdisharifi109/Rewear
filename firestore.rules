@@ -13,12 +13,15 @@ service cloud.firestore {
       allow create, update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // NOVAS REGRAS PARA AS AVALIAÇÕES
     match /reviews/{reviewId} {
-      // Qualquer pessoa pode ler as avaliações
       allow read: if true;
+      allow create: if request.auth != null;
+    }
 
-      // Apenas utilizadores autenticados podem criar avaliações
+    // --- REGRAS NOVAS PARA NOTIFICAÇÕES ---
+    match /notifications/{notificationId} {
+      // O utilizador só pode ler e escrever as suas próprias notificações
+      allow read, update: if request.auth != null && request.auth.uid == resource.data.userId;
       allow create: if request.auth != null;
     }
   }
