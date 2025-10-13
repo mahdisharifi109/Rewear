@@ -29,6 +29,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
+      {/* O body agora está limpo, sem classes de overflow */}
       <body className="font-body antialiased">
         <AuthProvider>
           <ProductProvider>

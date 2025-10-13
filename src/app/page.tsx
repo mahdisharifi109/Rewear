@@ -1,5 +1,5 @@
 import { ProductGrid } from "@/components/product-grid";
-import { HowItWorks } from "@/components/how-it-works"; // Importar o novo componente
+import { HowItWorks } from "@/components/how-it-works";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -22,9 +22,9 @@ function ProductGridFallback() {
 export default function Home() {
   return (
     <>
-      {/* Nova Hero Section */}
+      {/* Hero Section */}
       <section className="bg-primary/10">
-        <div className="container py-24 text-center">
+        <div className="container px-4 sm:px-6 lg:px-8 py-20 md:py-24 text-center">
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
               Dê uma segunda vida à sua roupa.
             </h1>
@@ -39,16 +39,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Grelha de Produtos */}
-      <div className="container py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="md:col-span-4"> {/* Temporariamente a ocupar tudo, podemos readicionar filtros depois se quisermos */}
-          <Suspense fallback={<ProductGridFallback/>}>
-            <ProductGrid />
-          </Suspense>
+      {/* Grelha de Produtos - Com a estrutura de layout corrigida */}
+      <div className="container px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1">
+            <Suspense fallback={<ProductGridFallback/>}>
+              <ProductGrid />
+            </Suspense>
         </div>
       </div>
 
-      {/* Nova secção "Como Funciona" */}
+      {/* Secção "Como Funciona" */}
       <HowItWorks />
     </>
   );

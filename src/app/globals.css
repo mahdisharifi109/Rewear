@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  /* Regra para forçar o site a caber no ecrã e remover o scroll horizontal */
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
   :root {
-    /* Cores do teu Blueprint.md */
     --background: 252 100% 97.6%; /* Light off-white (#F5F3FF) */
     --foreground: 252 20% 10%;
 

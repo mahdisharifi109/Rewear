@@ -3,7 +3,7 @@
 import React, { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package2, ShoppingCart, ChevronDown, User, Menu, Bell, Heart } from "lucide-react";
+import { Package2, ShoppingCart, ChevronDown, User, Menu, Bell, Heart, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/cart-context";
@@ -31,7 +31,7 @@ import type { Notification } from "@/lib/types";
 const categories = ["Roupa", "Calçado", "Livros", "Eletrónica", "Outro"];
 
 function SearchBarFallback() {
-  return <Skeleton className="hidden sm:block h-10 w-full max-w-xs" />;
+  return <Skeleton className="hidden h-10 w-full max-w-xs md:block" />;
 }
 
 function NotificationBell() {
@@ -134,12 +134,12 @@ export function Header() {
   }, []);
 
   useEffect(() => {
-    if (cartCount > 0) {
+    if (cartCount > 0 && isMounted) {
       setIsCartAnimating(true);
       const timer = setTimeout(() => setIsCartAnimating(false), 500);
       return () => clearTimeout(timer);
     }
-  }, [cartCount]);
+  }, [cartCount, isMounted]);
 
   const handleLogout = () => {
     logout();
@@ -154,7 +154,7 @@ export function Header() {
         title: "Acesso Negado",
         description: "Precisa de iniciar sessão para vender um artigo.",
       });
-      router.push('/login');
+      router.push('/login?redirect=/sell');
     }
   }
   
@@ -181,7 +181,7 @@ export function Header() {
           <span className="font-bold text-lg">SecondWave</span>
         </Link>
 
-        {/* --- SECÇÃO MODIFICADA --- */}
+        {/* --- NAVEGAÇÃO PARA DESKTOP --- */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-1 focus:outline-none transition-colors text-foreground/60 hover:text-foreground">
@@ -189,14 +189,10 @@ export function Header() {
               <ChevronDown className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem asChild>
-                <Link href="/catalog">Todos os Artigos</Link>
-              </DropdownMenuItem>
+              <DropdownMenuItem asChild><Link href="/catalog">Todos os Artigos</Link></DropdownMenuItem>
               <DropdownMenuSeparator />
               {categories.map((category) => (
-                <DropdownMenuItem key={category} asChild>
-                  <Link href={`/catalog?category=${category}`}>{category}</Link>
-                </DropdownMenuItem>
+                <DropdownMenuItem key={category} asChild><Link href={`/catalog?category=${category}`}>{category}</Link></DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -204,68 +200,70 @@ export function Header() {
           <NavLink href="/faq">FAQ</NavLink>
           <NavLink href="/contact">Contacto</NavLink>
         </nav>
-        {/* --- FIM DA SECÇÃO MODIFICADA --- */}
         
-        <div className="flex flex-1 items-center justify-end gap-1 md:gap-2 ml-auto">
-          <Suspense fallback={<SearchBarFallback />}>
-            <SearchBar />
-          </Suspense>
-        
-          <div className="hidden md:flex items-center gap-2">
-            {!isMounted ? (
-              <Skeleton className="h-10 w-24" />
-            ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost">
-                    <User className="mr-2 h-5 w-5" />
-                    {user.name}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild><Link href="/profile">Perfil</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link href="/dashboard">Dashboard</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link href="/wallet">Carteira</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link href="/favorites">Favoritos</Link></DropdownMenuItem>
-                  <DropdownMenuItem asChild><Link href="/settings">Definições</Link></DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>Terminar Sessão</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <>
-                <Button variant="ghost" asChild><Link href="/login">Iniciar Sessão</Link></Button>
-                <Button asChild><Link href="/register">Registar</Link></Button>
-              </>
-            )}
-            <Button variant="outline" asChild><Link href="/sell" onClick={handleSellClick}>Vender</Link></Button>
+        <div className="flex flex-1 items-center justify-end gap-1">
+          <div className="hidden md:flex flex-1 items-center justify-end gap-2">
+              <Suspense fallback={<SearchBarFallback />}>
+                  <SearchBar />
+              </Suspense>
+
+              {!isMounted ? <Skeleton className="h-10 w-48" /> : user ? (
+                  <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost">
+                              <User className="mr-2 h-5 w-5" />
+                              {user.name}
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild><Link href="/profile">Perfil</Link></DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href="/dashboard">Dashboard</Link></DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href="/wallet">Carteira</Link></DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href="/favorites">Favoritos</Link></DropdownMenuItem>
+                          <DropdownMenuItem asChild><Link href="/settings">Definições</Link></DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={handleLogout}>Terminar Sessão</DropdownMenuItem>
+                      </DropdownMenuContent>
+                  </DropdownMenu>
+              ) : (
+                  <>
+                      <Button variant="ghost" asChild><Link href="/login">Iniciar Sessão</Link></Button>
+                      <Button asChild><Link href="/register">Registar</Link></Button>
+                  </>
+              )}
+              <Button variant="outline" asChild><Link href="/sell" onClick={handleSellClick}>Vender</Link></Button>
           </div>
 
           {isMounted && user && (
-            <Button variant="ghost" size="icon" asChild>
-                <Link href="/favorites">
-                    <Heart className="h-5 w-5" />
-                    <span className="sr-only">Favoritos</span>
-                </Link>
-            </Button>
+            <>
+              <div className="hidden md:flex">
+                <Button variant="ghost" size="icon" asChild>
+                    <Link href="/favorites"><Heart className="h-5 w-5" /><span className="sr-only">Favoritos</span></Link>
+                </Button>
+                <NotificationBell />
+              </div>
+            </>
           )}
-
-          {isMounted && user && <NotificationBell />}
 
           <Button variant="ghost" size="icon" className={cn("relative", isCartAnimating && "animate-bounce")} onClick={() => setIsCartOpen(true)}>
             <ShoppingCart className="h-5 w-5" />
-            {cartCount > 0 && (
+            {isMounted && cartCount > 0 && (
               <Badge variant="default" className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-1 text-xs">{cartCount}</Badge>
             )}
             <span className="sr-only">Abrir carrinho</span>
           </Button>
 
           {isMounted && <SideCart open={isCartOpen} onOpenChange={setIsCartOpen} />}
-
+          
+          {/* --- MENU HAMBÚRGUER PARA MOBILE --- */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild><Button variant="ghost" size="icon" className="md:hidden"><Menu className="h-6 w-6" /><span className="sr-only">Abrir menu</span></Button></SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                  <nav className="flex flex-col gap-4 mt-8">
+                    <Suspense fallback={<SearchBarFallback />}>
+                      <SearchBar />
+                    </Suspense>
+                    <Separator />
                     {!isMounted ? <Skeleton className="h-8 w-32" /> : user ? (
                         <>
                             <div className="flex items-center gap-2 border-b pb-4">
