@@ -15,7 +15,7 @@ export type Product = {
   description: string;
   price: number;
   condition: 'Novo' | 'Muito bom' | 'Bom';
-  category: 'Roupa' | 'Calçado' | 'Livros' | 'Eletrónica' | 'Outro';
+  category: 'Roupa' | 'Calçado' | 'Livros' | 'Eletrónica' | 'Móveis' | 'Decoração' | 'Esportes' | 'Jogos' | 'Arte' | 'Outro';
   imageUrls: string[];
   imageHint: string;
   userEmail: string;
@@ -74,7 +74,6 @@ export type Conversation = {
     createdAt: Timestamp;
 };
 
-// TIPO QUE ESTAVA EM FALTA
 export interface AppUser {
   uid: string;
   email: string | null;

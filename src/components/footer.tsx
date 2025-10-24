@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Package2 } from "lucide-react";
+import { Recycle } from "lucide-react";
 
 export function Footer() {
   return (
@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2">
-              <Package2 className="h-6 w-6 text-primary" />
+              <Recycle className="h-6 w-6 text-primary" />
               <span className="font-bold text-lg">SecondWave</span>
             </Link>
             <p className="text-muted-foreground text-sm">
@@ -18,11 +18,13 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-foreground">Comprar</h3>
             <ul className="mt-4 space-y-2 text-sm">
-              <li><Link href="/" className="text-muted-foreground hover:text-foreground">Todos os Produtos</Link></li>
-              <li><Link href="/?category=Roupa" className="text-muted-foreground hover:text-foreground">Roupa</Link></li>
-              <li><Link href="/?category=Calçado" className="text-muted-foreground hover:text-foreground">Calçado</Link></li>
-              <li><Link href="/?category=Livros" className="text-muted-foreground hover:text-foreground">Livros</Link></li>
-              <li><Link href="/?category=Eletrónica" className="text-muted-foreground hover:text-foreground">Eletrónica</Link></li>
+              <li><Link href="/catalog" className="text-muted-foreground hover:text-foreground">Todos os Produtos</Link></li>
+              <li><Link href="/catalog?category=Roupa" className="text-muted-foreground hover:text-foreground">Roupa</Link></li>
+              <li><Link href="/catalog?category=Calçado" className="text-muted-foreground hover:text-foreground">Calçado</Link></li>
+              <li><Link href="/catalog?category=Livros" className="text-muted-foreground hover:text-foreground">Livros</Link></li>
+              <li><Link href="/catalog?category=Eletrónica" className="text-muted-foreground hover:text-foreground">Eletrónica</Link></li>
+              <li><Link href="/catalog?category=Móveis" className="text-muted-foreground hover:text-foreground">Móveis</Link></li>
+              <li><Link href="/catalog?category=Decoração" className="text-muted-foreground hover:text-foreground">Decoração</Link></li>
             </ul>
           </div>
           <div>

@@ -39,7 +39,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Grelha de Produtos - Com a estrutura de layout corrigida */}
+      {/* Grelha de Produtos */}
       <div className="container px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1">
             <Suspense fallback={<ProductGridFallback/>}>
@@ -47,6 +47,25 @@ export default function Home() {
             </Suspense>
         </div>
       </div>
+      
+      {/* Promotional Video Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold tracking-tight mb-8">Veja como é fácil!</h2>
+          <video
+            className="rounded-lg shadow-xl mx-auto"
+            src="https://storage.googleapis.com/gemini-generative-ai-public-supported-storage/assets/promotional_video_secondwave.mp4"
+            width="800"
+            height="450"
+            controls
+            loop
+            autoPlay
+            muted
+          >
+            Seu navegador não suporta a tag de vídeo.
+          </video>
+        </div>
+      </section>
 
       {/* Secção "Como Funciona" */}
       <HowItWorks />

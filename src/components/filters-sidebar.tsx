@@ -8,7 +8,6 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCallback, useState, useEffect } from 'react';
 
-// Listas de opções para os novos filtros
 const conditions = ["Novo", "Muito bom", "Bom"];
 const brands = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac", "Outro"];
 const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
@@ -18,13 +17,11 @@ export function FiltersSidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Estados para controlar os valores dos filtros
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]); // Novo estado para marcas
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);   // Novo estado para tamanhos
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
 
-  // Efeito para carregar os filtros a partir da URL
   useEffect(() => {
     const conditionsFromUrl = searchParams.get('conditions')?.split(',') || [];
     const brandsFromUrl = searchParams.get('brands')?.split(',') || [];
@@ -39,11 +36,10 @@ export function FiltersSidebar() {
     if (minPrice && maxPrice) {
       setPriceRange([Number(minPrice), Number(maxPrice)]);
     } else {
-      setPriceRange([0, 500]);
+      setPriceRange([0, 1000]);
     }
   }, [searchParams]);
 
-  // Função para criar a URL com os novos filtros
   const createQueryString = useCallback(
     (paramsToUpdate: Record<string, string | null>) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -59,7 +55,6 @@ export function FiltersSidebar() {
     [searchParams]
   );
 
-  // Função genérica para lidar com a mudança nos checkboxes
   const handleCheckboxChange = (
     value: string, 
     checked: boolean, 
@@ -74,7 +69,6 @@ export function FiltersSidebar() {
     router.push(pathname + '?' + createQueryString({ [paramName]: newValues.join(',') }));
   };
 
-
   const handlePriceChange = (newRange: [number, number]) => {
     setPriceRange(newRange);
   };
@@ -82,7 +76,7 @@ export function FiltersSidebar() {
   const applyPriceFilter = () => {
       router.push(pathname + '?' + createQueryString({ 
           minPrice: String(priceRange[0]), 
-          maxPrice: String(priceRange[1] === 1000 ? Infinity : priceRange[1]) 
+          maxPrice: String(priceRange[1])
       }));
   };
 
@@ -96,7 +90,6 @@ export function FiltersSidebar() {
         <CardTitle>Filtros</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Filtro de Preço */}
         <div className="space-y-4">
           <Label>Preço</Label>
           <Slider
@@ -107,12 +100,11 @@ export function FiltersSidebar() {
           />
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>{priceRange[0]}€</span>
-            <span>{priceRange[1] === 1000 ? '1000€+' : `${priceRange[1]}€`}</span>
+            <span>{priceRange[1]}€</span>
           </div>
           <Button onClick={applyPriceFilter} size="sm" className="w-full">Aplicar Preço</Button>
         </div>
 
-        {/* Filtro de Marca */}
         <div className="space-y-2">
           <Label>Marca</Label>
           <div className="space-y-2">
@@ -129,7 +121,6 @@ export function FiltersSidebar() {
           </div>
         </div>
 
-        {/* Filtro de Tamanho */}
         <div className="space-y-2">
           <Label>Tamanho</Label>
           <div className="space-y-2">
@@ -146,7 +137,6 @@ export function FiltersSidebar() {
           </div>
         </div>
 
-        {/* Filtro de Condição */}
         <div className="space-y-2">
           <Label>Condição</Label>
           <div className="space-y-2">

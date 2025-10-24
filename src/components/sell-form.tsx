@@ -38,8 +38,6 @@ export function SellForm() {
 
   const imagePreviews = watch("images");
 
-  // A função fileToDataUri foi removida daqui
-
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
@@ -100,7 +98,6 @@ export function SellForm() {
       </CardHeader>
       <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* O resto do JSX permanece igual */}
             <div className="space-y-2">
               <Label htmlFor="image-upload">Imagens do Produto</Label>
                <div className="relative flex justify-center items-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors">
@@ -176,6 +173,11 @@ export function SellForm() {
                                     <SelectItem value="Calçado">Calçado</SelectItem>
                                     <SelectItem value="Livros">Livros</SelectItem>
                                     <SelectItem value="Eletrónica">Eletrónica</SelectItem>
+                                    <SelectItem value="Móveis">Móveis</SelectItem>
+                                    <SelectItem value="Decoração">Decoração</SelectItem>
+                                    <SelectItem value="Esportes">Esportes</SelectItem>
+                                    <SelectItem value="Jogos">Jogos</SelectItem>
+                                    <SelectItem value="Arte">Arte</SelectItem>
                                     <SelectItem value="Outro">Outro</SelectItem>
                                 </SelectContent>
                             </Select>

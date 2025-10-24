@@ -3,7 +3,7 @@
 import React, { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package2, ShoppingCart, ChevronDown, User, Menu, Bell, Heart, Search } from "lucide-react";
+import { Recycle, ShoppingCart, ChevronDown, User, Menu, Bell, Heart, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/cart-context";
@@ -23,12 +23,13 @@ import { cn } from "@/lib/utils";
 import { SearchBar } from "./search-bar";
 import { Skeleton } from "./ui/skeleton";
 import { SideCart } from "./side-cart";
+import { ThemeToggle } from "./theme-toggle";
 
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch } from "firebase/firestore";
 import type { Notification } from "@/lib/types";
 
-const categories = ["Roupa", "Calçado", "Livros", "Eletrónica", "Outro"];
+const categories = ["Roupa", "Calçado", "Livros", "Eletrónica", "Móveis", "Decoração", "Esportes", "Jogos", "Arte", "Outro"];
 
 function SearchBarFallback() {
   return <Skeleton className="hidden h-10 w-full max-w-xs md:block" />;
@@ -177,7 +178,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center gap-2">
-          <Package2 className="h-6 w-6 text-primary" />
+          <Recycle className="h-6 w-6 text-primary" />
           <span className="font-bold text-lg">SecondWave</span>
         </Link>
 
@@ -198,7 +199,6 @@ export function Header() {
           </DropdownMenu>
           <NavLink href="/about">Sobre</NavLink>
           <NavLink href="/faq">FAQ</NavLink>
-          <NavLink href="/contact">Contacto</NavLink>
         </nav>
         
         <div className="flex flex-1 items-center justify-end gap-1">
@@ -235,15 +235,15 @@ export function Header() {
           </div>
 
           {isMounted && user && (
-            <>
-              <div className="hidden md:flex">
-                <Button variant="ghost" size="icon" asChild>
-                    <Link href="/favorites"><Heart className="h-5 w-5" /><span className="sr-only">Favoritos</span></Link>
-                </Button>
-                <NotificationBell />
-              </div>
-            </>
+            <div className="hidden md:flex">
+              <Button variant="ghost" size="icon" asChild>
+                  <Link href="/favorites"><Heart className="h-5 w-5" /><span className="sr-only">Favoritos</span></Link>
+              </Button>
+              <NotificationBell />
+            </div>
           )}
+
+          <ThemeToggle />
 
           <Button variant="ghost" size="icon" className={cn("relative", isCartAnimating && "animate-bounce")} onClick={() => setIsCartOpen(true)}>
             <ShoppingCart className="h-5 w-5" />

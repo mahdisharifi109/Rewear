@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/context/auth-context';
 import { ProductProvider } from '@/context/product-context';
 import { Suspense } from 'react';
+import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'SecondWave',
@@ -23,30 +24,36 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt">
+    <html lang="pt" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
-      {/* O body agora está limpo, sem classes de overflow */}
       <body className="font-body antialiased">
-        <AuthProvider>
-          <ProductProvider>
-            <CartProvider>
-              <div className="flex min-h-screen flex-col">
-                <Header />
-                <main className="flex-1">
-                  <Suspense fallback={<PageFallback />}>
-                    {children}
-                  </Suspense>
-                </main>
-                <Footer />
-              </div>
-              <Toaster />
-            </CartProvider>
-          </ProductProvider>
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <ProductProvider>
+              <CartProvider>
+                <div className="flex min-h-screen flex-col">
+                  <Header />
+                  <main className="flex-1">
+                    <Suspense fallback={<PageFallback />}>
+                      {children}
+                    </Suspense>
+                  </main>
+                  <Footer />
+                </div>
+                <Toaster />
+              </CartProvider>
+            </ProductProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

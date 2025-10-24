@@ -18,7 +18,7 @@ import { Product } from "@/lib/types";
 import { editFormSchema, type EditFormValues } from "@/lib/schemas";
 import { useAuth } from "@/context/auth-context";
 import { SelectOrInput } from "./ui/select-or-input";
-import { fileToDataUri } from "@/lib/imageUtils"; // Importar a função
+import { fileToDataUri } from "@/lib/imageUtils";
 
 const PREDEFINED_BRANDS = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac"];
 const PREDEFINED_MATERIALS = ["Algodão", "Poliéster", "Lã", "Seda", "Plástico", "Metal"];
@@ -37,15 +37,20 @@ export function EditForm({ product }: EditFormProps) {
   const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<EditFormValues>({
     resolver: zodResolver(editFormSchema),
     defaultValues: {
-      title: product.name || "", description: product.description || "", price: product.price ?? undefined, quantity: product.quantity || 1,
-      category: product.category || "", condition: product.condition || "", brand: product.brand || "", material: product.material || "",
-      sizes: product.sizes?.join(', ') || "", images: product.imageUrls || [],
+      title: product.name || "", 
+      description: product.description || "", 
+      price: product.price ?? undefined, 
+      quantity: product.quantity || 1,
+      category: product.category || "", 
+      condition: product.condition || "", 
+      brand: product.brand || "", 
+      material: product.material || "",
+      sizes: product.sizes?.join(', ') || "", 
+      images: product.imageUrls || [],
     },
   });
 
   const imagePreviews = watch("images");
-
-  // A função fileToDataUri foi removida daqui
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -67,15 +72,26 @@ export function EditForm({ product }: EditFormProps) {
         const imageUrls = await Promise.all(
             data.images.map(image => {
                 if (typeof image === 'string') return image;
-                return fileToDataUri(image as File); // Usar a função importada
+                return fileToDataUri(image as File);
             })
         );
         const sizesArray = data.sizes ? data.sizes.split(',').map(s => s.trim().toUpperCase()) : [];
         const productData: Product = {
-          id: product.id, name: data.title, description: data.description, price: data.price, quantity: data.quantity, category: data.category as any,
-          condition: data.condition as any, brand: data.brand || "", material: data.material || "", sizes: sizesArray, imageUrls: imageUrls,
-          imageHint: data.title.split(" ").slice(0, 2).join(" "), userEmail: product.userEmail,
-          userName: product.userName || user?.name || 'Vendedor Desconhecido', userId: product.userId,
+          id: product.id, 
+          name: data.title, 
+          description: data.description, 
+          price: data.price, 
+          quantity: data.quantity, 
+          category: data.category as any,
+          condition: data.condition as any, 
+          brand: data.brand || "", 
+          material: data.material || "", 
+          sizes: sizesArray, 
+          imageUrls: imageUrls,
+          imageHint: data.title.split(" ").slice(0, 2).join(" "), 
+          userEmail: product.userEmail,
+          userName: product.userName || user?.name || 'Vendedor Desconhecido', 
+          userId: product.userId,
         };
         await updateProduct(productData);
         toast({ title: "Anúncio Atualizado!", description: "O seu produto foi atualizado com sucesso!" });
@@ -95,8 +111,7 @@ export function EditForm({ product }: EditFormProps) {
         <CardDescription>Faça as alterações necessárias ao seu produto.</CardDescription>
       </CardHeader>
       <CardContent>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* O resto do JSX permanece igual */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="image-upload">Imagens do Produto</Label>
                <div className="relative flex justify-center items-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors">
@@ -173,6 +188,11 @@ export function EditForm({ product }: EditFormProps) {
                                     <SelectItem value="Calçado">Calçado</SelectItem>
                                     <SelectItem value="Livros">Livros</SelectItem>
                                     <SelectItem value="Eletrónica">Eletrónica</SelectItem>
+                                    <SelectItem value="Móveis">Móveis</SelectItem>
+                                    <SelectItem value="Decoração">Decoração</SelectItem>
+                                    <SelectItem value="Esportes">Esportes</SelectItem>
+                                    <SelectItem value="Jogos">Jogos</SelectItem>
+                                    <SelectItem value="Arte">Arte</SelectItem>
                                     <SelectItem value="Outro">Outro</SelectItem>
                                 </SelectContent>
                             </Select>
