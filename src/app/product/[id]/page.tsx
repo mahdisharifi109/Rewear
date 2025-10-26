@@ -1,3 +1,5 @@
+// src/app/product/[id]/page.tsx
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -12,7 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { useAuth } from '@/context/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, MessageSquare, Loader2, Video } from 'lucide-react'; // IMPORTADO O Video
+import { Heart, MessageSquare, Loader2 } from 'lucide-react'; // REMOVIDO: Video
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -20,7 +22,7 @@ import { StarRating } from '@/components/ui/star-rating';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import type { Conversation } from '@/lib/types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+// REMOVIDO: Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -37,8 +39,9 @@ export default function ProductDetailPage() {
 
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
   const [isCreatingChat, setIsCreatingChat] = useState(false);
-  const [isAIVideoLoading, setIsAIVideoLoading] = useState(false); // NOVO: Estado para simular vídeo IA
-  const [aiVideoUrl, setAiVideoUrl] = useState<string | null>(null); // NOVO: URL do vídeo simulado
+  // REMOVIDO: useState para isAIVideoLoading e aiVideoUrl
+  // const [isAIVideoLoading, setIsAIVideoLoading] = useState(false);
+  // const [aiVideoUrl, setAiVideoUrl] = useState<string | null>(null);
 
   if (!product) {
     return <div className="container py-16 text-center"><h1 className="text-4xl font-bold">Produto não encontrado</h1></div>;
@@ -67,22 +70,32 @@ export default function ProductDetailPage() {
     if (!user || isOwner) return;
     setIsCreatingChat(true);
     try {
+        const buyerId = user.uid;
+        const sellerId = product.userId;
+
+        // 1. Tentar encontrar uma conversa existente entre COMPRADOR, VENDEDOR e sobre este PRODUTO
         const conversationsQuery = query(
             collection(db, "conversations"),
-            where("participantIds", "array-contains", user.uid),
+            where("participantIds", "array-contains", buyerId),
             where("product.id", "==", product.id)
         );
+        
         const querySnapshot = await getDocs(conversationsQuery);
-        const existingConvo = querySnapshot.docs.find(doc => doc.data().participantIds.includes(product.userId));
+        
+        // Refina a busca no cliente para garantir que o vendedor específico está no chat
+        const existingConvo = querySnapshot.docs.find(doc => 
+            doc.data().participantIds.includes(sellerId)
+        );
 
         if (existingConvo) {
             router.push(`/inbox/${existingConvo.id}`);
         } else {
+            // 2. Se não existir, cria uma nova conversa
             const newConvoRef = await addDoc(collection(db, 'conversations'), {
-                participantIds: [user.uid, product.userId],
+                participantIds: [buyerId, sellerId],
                 participants: {
-                    [user.uid]: { name: user.name, avatar: `https://api.dicebear.com/8.x/initials/svg?seed=${user.name}` },
-                    [product.userId]: { name: product.userName, avatar: `https://api.dicebear.com/8.x/initials/svg?seed=${product.userName}` }
+                    [buyerId]: { name: user.name, avatar: `https://api.dicebear.com/8.x/initials/svg?seed=${user.name}` },
+                    [sellerId]: { name: product.userName, avatar: `https://api.dicebear.com/8.x/initials/svg?seed=${product.userName}` }
                 },
                 product: {
                     id: product.id,
@@ -101,18 +114,8 @@ export default function ProductDetailPage() {
         setIsCreatingChat(false);
     }
   }
-  
-  // NOVO: Função para simular a criação do vídeo IA
-  const handleAIVideoCreation = () => {
-    setIsAIVideoLoading(true);
-    // Simulação de um pedido API para a IA (que levaria algum tempo)
-    setTimeout(() => {
-        // Mockup de um URL de vídeo (Exemplo: Rickroll para simular um vídeo)
-        const mockVideo = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1";
-        setAiVideoUrl(mockVideo);
-        setIsAIVideoLoading(false);
-    }, 2000); // 2 segundos de simulação de carregamento
-  }
+
+  // REMOVIDO: Função handleAIVideoCreation
 
   return (
     <div className="bg-muted/40">
@@ -169,37 +172,7 @@ export default function ProductDetailPage() {
                   </div>
                 )}
                 
-                {/* BOTÃO E DIÁLOGO DO VÍDEO IA */}
-                <Dialog open={aiVideoUrl !== null || isAIVideoLoading} onOpenChange={(open) => { if (!open) setAiVideoUrl(null); }}>
-                    <Button onClick={handleAIVideoCreation} variant="outline" className="w-full" disabled={isAIVideoLoading || aiVideoUrl !== null}>
-                        {isAIVideoLoading ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Criando Vídeo IA...</>
-                        ) : aiVideoUrl ? (
-                            <><Video className="mr-2 h-5 w-5" /> Ver Simulação de Compra IA</>
-                        ) : (
-                            <><Video className="mr-2 h-5 w-5" /> Simular Compra e Entrega (IA)</>
-                        )}
-                    </Button>
-                    <DialogContent className="sm:max-w-[800px] aspect-video p-0">
-                        <DialogHeader>
-                            <DialogTitle className="pt-4 px-6">Simulação de Compra e Entrega por IA</DialogTitle>
-                            <DialogDescription className="px-6">Demonstração de como o produto seria embalado e entregue, gerado por IA.</DialogDescription>
-                        </DialogHeader>
-                        {aiVideoUrl && (
-                            <div className="w-full h-full p-6">
-                                {/* Usar iframe para incorporar o vídeo, com autoplay e mudo */}
-                                <iframe
-                                    className="w-full h-full rounded-md"
-                                    src={aiVideoUrl}
-                                    title="AI Generated Purchase Simulation"
-                                    frameBorder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                ></iframe>
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
+                {/* REMOVIDO: O BOTÃO E DIÁLOGO DO VÍDEO IA */}
                 
                 <div className="space-y-3">
                   {isOwner ? (
