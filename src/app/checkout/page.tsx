@@ -10,13 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react"; // <-- ADICIONADO useState
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, type CheckoutFormValues } from "@/lib/schemas";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CreditCard, CheckCircle, ShieldCheck } from "lucide-react";
+import { CreditCard, CheckCircle, ShieldCheck, Loader2 } from "lucide-react"; // <-- ADICIONADO Loader2
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/context/auth-context";
 
 // Componente para o Resumo da Encomenda (à direita)
 const OrderSummary = () => {
@@ -70,28 +71,54 @@ const OrderSummary = () => {
 
 // Hook e Página Principal (sem alterações necessárias)
 const useCheckoutGuard = () => {
-    const { cartCount, clearCart } = useCart();
+    const { cartCount } = useCart();
     const router = useRouter();
     useEffect(() => {
+        // Redireciona se o carrinho estiver vazio
         const timer = setTimeout(() => { if (cartCount === 0) router.replace('/cart'); }, 500);
         return () => clearTimeout(timer);
     }, [cartCount, router]);
-    return { cartCount, clearCart, router };
+    return { cartCount, router };
 };
 
 export default function CheckoutPage() {
-    const { cartCount, clearCart, router } = useCheckoutGuard();
+    const { cartCount, router, } = useCheckoutGuard();
     const { toast } = useToast();
+    const { user } = useAuth(); // OBTER USER PARA A TRANSAÇÃO
+    const { finalizeCheckout, clearCart } = useCart(); // OBTER finalizeCheckout
+    const [isProcessing, setIsProcessing] = useState(false); // <-- useState é usado aqui
+
     const { control, handleSubmit, formState: { errors } } = useForm<CheckoutFormValues>({
         resolver: zodResolver(checkoutSchema),
-        defaultValues: { email: "", firstName: "", lastName: "", phone: "", country: "Portugal", address: "", city: "", region: "", postalCode: "" }
+        defaultValues: { 
+            email: user?.email || "", 
+            firstName: user?.name.split(' ')[0] || "", 
+            lastName: user?.name.split(' ').slice(1).join(' ') || "", 
+            phone: user?.phone || "", // Assumindo que user.phone existe no AppUser
+            country: "Portugal", 
+            address: "", city: "", region: "", postalCode: "" 
+        }
     });
     
-    const onFinalSubmit = (data: CheckoutFormValues) => {
-        console.log("Dados Finais:", data);
-        toast({ title: "Compra Realizada com Sucesso!", description: "Obrigado pela sua compra simulada." });
-        clearCart();
-        router.push('/');
+    const onFinalSubmit = async (data: CheckoutFormValues) => {
+        if (!user) {
+            toast({ variant: "destructive", title: "Erro de Autenticação", description: "Sessão expirada. Por favor, inicie sessão novamente." });
+            router.push('/login?redirect=/checkout');
+            return;
+        }
+
+        setIsProcessing(true);
+        try {
+            await finalizeCheckout(user, data); // CHAMADA DA FUNÇÃO DE TRANSAÇÃO
+
+            toast({ title: "Compra Realizada com Sucesso!", description: "Obrigado pela sua compra simulada. O histórico foi atualizado." });
+            router.push('/profile'); // Redireciona para o perfil/histórico
+        } catch (error) {
+            console.error("Erro no checkout:", error);
+            toast({ variant: "destructive", title: "Erro de Transação", description: "Não foi possível finalizar a compra. Tente novamente." });
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     if (cartCount === 0) {
@@ -129,7 +156,10 @@ export default function CheckoutPage() {
                                 </div>
                             </CardContent>
                         </Card>
-                        <Button type="submit" size="lg" className="w-full">Pagar e Finalizar Encomenda <CheckCircle className="ml-2 h-5 w-5" /></Button>
+                        <Button type="submit" size="lg" className="w-full" disabled={isProcessing}>
+                            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <CheckCircle className="ml-2 h-5 w-5" />}
+                            Pagar e Finalizar Encomenda 
+                        </Button>
                     </div>
                     <div className="lg:col-span-1"><OrderSummary /></div>
                 </form>

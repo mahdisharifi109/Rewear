@@ -22,15 +22,13 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { SearchBar } from "./search-bar";
 import { Skeleton } from "./ui/skeleton";
-// import { SideCart } from "./side-cart"; // <-- REMOVIDO para dynamic import
-import dynamic from "next/dynamic"; // <-- NOVO: Importar dynamic
+import dynamic from "next/dynamic"; 
 
 import { db } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch } from "firebase/firestore";
 import type { Notification } from "@/lib/types";
 
 // Dynamic Import para o SideCart (Otimização de Performance)
-// O SideCart só será carregado e injetado no bundle principal quando for usado.
 const DynamicSideCart = dynamic(() => import("./side-cart").then(mod => mod.SideCart), {
     ssr: false,
 });
@@ -215,32 +213,39 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-center gap-2">
-          <Recycle className="h-6 w-6 text-primary" /> 
-          <span className="font-bold text-lg">Rewear</span>
-        </Link>
-
-        {/* --- NAVEGAÇÃO PARA DESKTOP (Limpa) --- */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 focus:outline-none transition-colors text-foreground/60 hover:text-foreground">
-              Catálogo
-              <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem asChild><Link href="/catalog">Todos os Artigos</Link></DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {categories.map((category) => (
-                <DropdownMenuItem key={category} asChild><Link href={`/catalog?category=${category}`}>{category}</Link></DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <NavLink href="/sell" onClick={handleSellClick}>Vender</NavLink>
-        </nav>
+      <div className="container flex h-16 items-center justify-between gap-4"> {/* <-- ALTERADO: Adicionado justify-between gap-4 */}
         
-        <div className="flex flex-1 items-center justify-end gap-1">
-          <div className="hidden md:flex flex-1 items-center justify-end gap-2">
+        {/* --- GRUPO ESQUERDO: LOGO E LINKS PRINCIPAIS --- */}
+        <div className="flex items-center gap-6"> {/* <-- ALTERADO: Maior gap para separar a logo */}
+            <Link href="/" className="flex items-center gap-2">
+                <Recycle className="h-6 w-6 text-primary" /> 
+                <span className="font-bold text-lg">Rewear</span>
+            </Link>
+
+            {/* NAVEGAÇÃO PARA DESKTOP (Limpa) */}
+            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+                <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center gap-1 focus:outline-none transition-colors text-foreground/60 hover:text-foreground">
+                    Catálogo
+                    <ChevronDown className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                    <DropdownMenuItem asChild><Link href="/catalog">Todos os Artigos</Link></DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {categories.map((category) => (
+                        <DropdownMenuItem key={category} asChild><Link href={`/catalog?category=${category}`}>{category}</Link></DropdownMenuItem>
+                    ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <NavLink href="/sell" onClick={handleSellClick}>Vender</NavLink>
+            </nav>
+        </div>
+
+        {/* --- GRUPO DIREITO: PESQUISA, AÇÕES E MENU --- */}
+        <div className="flex items-center gap-3"> {/* <-- ALTERADO: Espaçamento para ícones */}
+          
+          {/* 1. Pesquisa e Tema */}
+          <div className="hidden md:flex items-center gap-2">
               <Suspense fallback={<SearchBarFallback />}>
                   <SearchBar />
               </Suspense>
@@ -250,17 +255,30 @@ export function Header() {
                   {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                   <span className="sr-only">Alternar tema</span>
               </Button>
-              
-              {!isMounted ? <Skeleton className="h-10 w-48" /> : user ? (
+          </div>
+          
+          {/* 2. ÍCONES DE AÇÃO (Login/User) */}
+          {!isMounted ? <Skeleton className="h-10 w-10 md:w-auto" /> : user ? (
+              <div className="flex items-center gap-1"> {/* <-- Adiciona gap entre os ícones */}
+                  {/* Ícones de Ação Logados (Desktop) */}
+                  <div className="hidden md:flex items-center gap-1">
+                      <Button variant="ghost" size="icon" asChild>
+                          <Link href="/favorites"><Heart className="h-5 w-5" /><span className="sr-only">Favoritos</span></Link>
+                      </Button>
+                      <Button variant="ghost" size="icon" asChild>
+                          <Link href="/inbox"><MessageSquare className="h-5 w-5" /><span className="sr-only">Mensagens</span></Link>
+                      </Button>
+                      <NotificationBell />
+                  </div>
+
+                  {/* Dropdown de Perfil (User Icon) */}
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
                               <User className="h-5 w-5" />
                           </Button>
                       </DropdownMenuTrigger>
-                      {/* ESTRUTURA DO MENU LIMPA E DIRETA */}
                       <DropdownMenuContent align="end" className="w-48">
-                          {/* GRUPO 1: Ações Principais do Utilizador */}
                           <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild><Link href="/profile">Perfil</Link></DropdownMenuItem>
@@ -268,45 +286,25 @@ export function Header() {
                           <DropdownMenuItem asChild><Link href="/wallet">Carteira</Link></DropdownMenuItem>
                           <DropdownMenuItem asChild><Link href="/favorites">Favoritos</Link></DropdownMenuItem>
                           <DropdownMenuItem asChild><Link href="/inbox" className="flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Mensagens</Link></DropdownMenuItem>
-                          
-                          {/* SEPARADOR */}
                           <DropdownMenuSeparator />
-                          
-                          {/* GRUPO 2: Ajuda (Sem Label) */}
                           <DropdownMenuItem asChild><Link href="/about">Sobre</Link></DropdownMenuItem>
                           <DropdownMenuItem asChild><Link href="/faq">FAQ</Link></DropdownMenuItem>
                           <DropdownMenuItem asChild><Link href="/contact">Contacto</Link></DropdownMenuItem>
-
-                          {/* SEPARADOR */}
                           <DropdownMenuSeparator />
-
-                          {/* GRUPO 3: Configuração e Saída */}
                           <DropdownMenuItem asChild><Link href="/settings">Definições</Link></DropdownMenuItem>
                           <DropdownMenuItem onClick={handleLogout}>Terminar Sessão</DropdownMenuItem>
                       </DropdownMenuContent>
                   </DropdownMenu>
-              ) : (
-                  <>
-                      <Button variant="ghost" asChild><Link href="/login">Iniciar Sessão</Link></Button>
-                      <Button asChild><Link href="/register">Registar</Link></Button>
-                  </>
-              )}
-          </div>
-
-          {isMounted && user && (
-            <>
-              <div className="hidden md:flex">
-                <Button variant="ghost" size="icon" asChild>
-                    <Link href="/favorites"><Heart className="h-5 w-5" /><span className="sr-only">Favoritos</span></Link>
-                </Button>
-                 <Button variant="ghost" size="icon" asChild>
-                    <Link href="/inbox"><MessageSquare className="h-5 w-5" /><span className="sr-only">Mensagens</span></Link>
-                 </Button>
-                <NotificationBell />
               </div>
-            </>
+          ) : (
+              // Botões Login/Registar (Desktop)
+              <div className="hidden md:flex items-center gap-2">
+                  <Button variant="ghost" asChild><Link href="/login">Iniciar Sessão</Link></Button>
+                  <Button asChild><Link href="/register">Registar</Link></Button>
+              </div>
           )}
 
+          {/* 3. Carrinho */}
           <Button variant="ghost" size="icon" className={cn("relative", isCartAnimating && "animate-bounce")} onClick={() => setIsCartOpen(true)}>
             <ShoppingCart className="h-5 w-5" />
             {isMounted && cartCount > 0 && (
@@ -315,10 +313,9 @@ export function Header() {
             <span className="sr-only">Abrir carrinho</span>
           </Button>
 
-          {/* OTIMIZAÇÃO: Dynamic import do SideCart */}
           {isMounted && <DynamicSideCart open={isCartOpen} onOpenChange={setIsCartOpen} />}
           
-          {/* --- MENU HAMBÚRGUER PARA MOBILE (Responsivo e Completo) --- */}
+          {/* 4. Menu Hamburger (Mobile) */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild><Button variant="ghost" size="icon" className="md:hidden"><Menu className="h-6 w-6" /><span className="sr-only">Abrir menu</span></Button></SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
@@ -328,7 +325,7 @@ export function Header() {
                     </Suspense>
                     <Separator />
 
-                    {/* Links de Utilizador */}
+                    {/* Links de Utilizador (Mobile) */}
                     {!isMounted ? <Skeleton className="h-8 w-32" /> : user ? (
                         <>
                             <div className="flex items-center gap-2 border-b pb-4">
@@ -350,20 +347,20 @@ export function Header() {
                     <MobileNavLink href="/sell">Vender</MobileNavLink>
                     <Separator />
                     
-                    {/* Links de Catálogo */}
+                    {/* Links de Catálogo (Mobile) */}
                     <MobileNavLink href="/catalog">Catálogo Completo</MobileNavLink>
                     {categories.map((category) => (
                          <MobileNavLink key={category} href={`/catalog?category=${category}`}><span className="ml-4 text-muted-foreground">{category}</span></MobileNavLink>
                     ))}
                     <Separator />
 
-                    {/* Links de Ajuda */}
+                    {/* Links de Ajuda (Mobile) */}
                     <MobileNavLink href="/about">Sobre</MobileNavLink>
                     <MobileNavLink href="/faq">FAQ</MobileNavLink>
                     <MobileNavLink href="/contact">Contacto</MobileNavLink>
                     <Separator />
                     
-                    {/* Opções de Tema e Logout */}
+                    {/* Opções de Tema e Logout (Mobile) */}
                     <div className="flex justify-between items-center px-2">
                         <span className="font-medium">Modo {theme === 'light' ? 'Escuro' : 'Claro'}</span>
                         <Button variant="ghost" size="icon" onClick={toggleTheme}>
