@@ -213,16 +213,17 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between gap-4"> {/* <-- ALTERADO: Adicionado justify-between gap-4 */}
+      {/* ESTA LINHA GARANTE QUE O HEADER ALINHA PERFEITAMENTE COM O CONTEÚDO */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between gap-4"> 
         
         {/* --- GRUPO ESQUERDO: LOGO E LINKS PRINCIPAIS --- */}
-        <div className="flex items-center gap-6"> {/* <-- ALTERADO: Maior gap para separar a logo */}
+        <div className="flex items-center gap-6"> 
             <Link href="/" className="flex items-center gap-2">
                 <Recycle className="h-6 w-6 text-primary" /> 
                 <span className="font-bold text-lg">Rewear</span>
             </Link>
 
-            {/* NAVEGAÇÃO PARA DESKTOP (Limpa) */}
+            {/* NAVEGAÇÃO PARA DESKTOP (Catálogo e Vender) */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
                 <DropdownMenu>
                     <DropdownMenuTrigger className="flex items-center gap-1 focus:outline-none transition-colors text-foreground/60 hover:text-foreground">
@@ -242,9 +243,9 @@ export function Header() {
         </div>
 
         {/* --- GRUPO DIREITO: PESQUISA, AÇÕES E MENU --- */}
-        <div className="flex items-center gap-3"> {/* <-- ALTERADO: Espaçamento para ícones */}
+        <div className="flex items-center gap-4 ml-auto"> 
           
-          {/* 1. Pesquisa e Tema */}
+          {/* 1. Pesquisa e Tema (Desktop) */}
           <div className="hidden md:flex items-center gap-2">
               <Suspense fallback={<SearchBarFallback />}>
                   <SearchBar />
@@ -259,9 +260,9 @@ export function Header() {
           
           {/* 2. ÍCONES DE AÇÃO (Login/User) */}
           {!isMounted ? <Skeleton className="h-10 w-10 md:w-auto" /> : user ? (
-              <div className="flex items-center gap-1"> {/* <-- Adiciona gap entre os ícones */}
+              <div className="flex items-center gap-1.5"> 
                   {/* Ícones de Ação Logados (Desktop) */}
-                  <div className="hidden md:flex items-center gap-1">
+                  <div className="hidden md:flex items-center gap-1.5"> 
                       <Button variant="ghost" size="icon" asChild>
                           <Link href="/favorites"><Heart className="h-5 w-5" /><span className="sr-only">Favoritos</span></Link>
                       </Button>
@@ -325,7 +326,7 @@ export function Header() {
                     </Suspense>
                     <Separator />
 
-                    {/* Links de Utilizador (Mobile) */}
+                    {/* Links de Utilizador */}
                     {!isMounted ? <Skeleton className="h-8 w-32" /> : user ? (
                         <>
                             <div className="flex items-center gap-2 border-b pb-4">
@@ -347,20 +348,20 @@ export function Header() {
                     <MobileNavLink href="/sell">Vender</MobileNavLink>
                     <Separator />
                     
-                    {/* Links de Catálogo (Mobile) */}
+                    {/* Links de Catálogo */}
                     <MobileNavLink href="/catalog">Catálogo Completo</MobileNavLink>
                     {categories.map((category) => (
                          <MobileNavLink key={category} href={`/catalog?category=${category}`}><span className="ml-4 text-muted-foreground">{category}</span></MobileNavLink>
                     ))}
                     <Separator />
 
-                    {/* Links de Ajuda (Mobile) */}
+                    {/* Links de Ajuda */}
                     <MobileNavLink href="/about">Sobre</MobileNavLink>
                     <MobileNavLink href="/faq">FAQ</MobileNavLink>
                     <MobileNavLink href="/contact">Contacto</MobileNavLink>
                     <Separator />
                     
-                    {/* Opções de Tema e Logout (Mobile) */}
+                    {/* Opções de Tema e Logout */}
                     <div className="flex justify-between items-center px-2">
                         <span className="font-medium">Modo {theme === 'light' ? 'Escuro' : 'Claro'}</span>
                         <Button variant="ghost" size="icon" onClick={toggleTheme}>
