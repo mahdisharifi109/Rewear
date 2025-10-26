@@ -1,19 +1,14 @@
+// src/context/auth-context.tsx
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect, useCallback } from 'react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth'; 
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, setDoc, increment } from 'firebase/firestore';
+import type { AppUser as UserType } from '@/lib/types'; // Importar AppUser de types.ts
 
-interface AppUser {
-  uid: string;
-  email: string | null;
-  name: string;
-  favorites: string[];
-  preferredBrands?: string[];
-  preferredSizes?: string[];
-  walletBalance?: number; // NOVO CAMPO
-}
+interface AppUser extends UserType {} // Usar a interface completa de types.ts
 
 interface AuthContextType {
   user: AppUser | null;
@@ -21,7 +16,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   toggleFavorite: (productId: string) => Promise<void>;
   updateUserPreferences: (preferences: { preferredBrands?: string[]; preferredSizes?: string[] }) => Promise<void>;
-  addToWallet: (amount: number) => Promise<void>; // NOVA FUNÇÃO
+  addToWallet: (amount: number) => Promise<void>;
+  refetchUser: () => Promise<void>; // <-- ADICIONADO refetchUser
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,26 +26,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Função central para buscar dados do utilizador no Firestore
+  const fetchUserData = useCallback(async (firebaseUser: FirebaseUser) => {
+    const userDocRef = doc(db, "users", firebaseUser.uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      // Mapeamento dos campos, incluindo os novos (bio, location, phone, photoURL, createdAt)
+      setUser({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        name: userData.username,
+        favorites: userData.favorites || [],
+        preferredBrands: userData.preferredBrands || [],
+        preferredSizes: userData.preferredSizes || [],
+        walletBalance: userData.walletBalance || 0,
+        bio: userData.bio,
+        location: userData.location,
+        phone: userData.phone,
+        photoURL: userData.photoURL,
+        createdAt: userData.createdAt,
+      } as AppUser);
+    } else {
+        setUser(null);
+    }
+  }, []);
+  
+  // Função para re-buscar os dados do utilizador
+  const refetchUser = useCallback(async () => {
+      if (auth.currentUser) {
+          await fetchUserData(auth.currentUser);
+      }
+  }, [fetchUserData]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
-        const userDocRef = doc(db, "users", firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            name: userData.username,
-            favorites: userData.favorites || [],
-            preferredBrands: userData.preferredBrands || [],
-            preferredSizes: userData.preferredSizes || [],
-            walletBalance: userData.walletBalance || 0, // Carregar o saldo
-          });
-        } else {
-            setUser(null);
-        }
+        await fetchUserData(firebaseUser);
       } else {
         setUser(null);
       }
@@ -57,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [fetchUserData]);
 
   const logout = useCallback(async () => {
     try {
@@ -97,7 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  // --- NOVA FUNÇÃO PARA ATUALIZAR A CARTEIRA ---
   const addToWallet = useCallback(async (amount: number) => {
       if (!user) return;
       const userDocRef = doc(db, "users", user.uid);
@@ -112,14 +125,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
   }, [user]);
 
+
   const value = useMemo(() => ({
     user,
     loading,
     logout,
     toggleFavorite,
     updateUserPreferences,
-    addToWallet, // Adicionar a nova função
-  }), [user, loading, logout, toggleFavorite, updateUserPreferences, addToWallet]);
+    addToWallet,
+    refetchUser, // <-- ADICIONADO refetchUser ao valor do contexto
+  }), [user, loading, logout, toggleFavorite, updateUserPreferences, addToWallet, refetchUser]);
 
   return (
     <AuthContext.Provider value={value}>

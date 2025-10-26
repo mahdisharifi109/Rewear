@@ -6,7 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { Minus, Plus, Trash2 } from "lucide-react";
+// Importar Recycle para usar como logo no carrinho vazio
+import { Minus, Plus, Trash2, Recycle } from "lucide-react"; 
 
 interface SideCartProps {
   open: boolean;
@@ -78,7 +79,8 @@ export function SideCart({ open, onOpenChange }: SideCartProps) {
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6">
-            <p className="text-muted-foreground">O seu carrinho está vazio.</p>
+            <Recycle className="h-12 w-12 text-primary" /> {/* <-- LOGO RECYCLE */}
+            <p className="text-muted-foreground">O seu carrinho Rewear está vazio.</p>
             <Button asChild variant="outline" onClick={() => onOpenChange(false)}>
               <Link href="/">Continuar a Comprar</Link>
             </Button>

@@ -2,22 +2,22 @@
 
 import type { Product } from '@/lib/types';
 import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc, updateDoc, getDocs, limit, startAfter, QueryDocumentSnapshot, DocumentData } from 'firebase/firestore'; 
+import { collection, onSnapshot, addDoc, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc, updateDoc, getDocs, limit, startAfter, QueryDocumentSnapshot, DocumentData, getDoc } from 'firebase/firestore'; 
 import { db } from '@/lib/firebase';
 
-const PRODUCTS_PER_PAGE = 8; // Vamos carregar 8 produtos de cada vez
+const PRODUCTS_PER_PAGE = 8; 
 
 type NewProduct = Omit<Product, 'id' | 'createdAt'>;
 
 interface ProductContextType {
   products: Product[];
   loading: boolean;
-  hasMoreProducts: boolean; // Para saber se ainda há produtos para carregar
+  hasMoreProducts: boolean; 
   addProduct: (product: NewProduct) => Promise<void>;
   updateProduct: (updatedProduct: Product) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   markAsSold: (productId: string) => Promise<void>;
-  loadMoreProducts: () => Promise<void>; // NOVA FUNÇÃO
+  loadMoreProducts: () => Promise<void>; 
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -28,7 +28,8 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
 
-  // Carrega o lote inicial de produtos
+  // ... (fetchInitialProducts e loadMoreProducts permanecem inalterados)
+  
   useEffect(() => {
     const fetchInitialProducts = async () => {
         setLoading(true);
@@ -64,7 +65,6 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     fetchInitialProducts();
   }, []);
 
-  // Função para carregar mais produtos
   const loadMoreProducts = useCallback(async () => {
     if (!lastDoc || !hasMoreProducts) return;
 
@@ -98,7 +98,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   }, [lastDoc, hasMoreProducts]);
 
 
-  // Funções existentes (create, update, delete) - modificada para usar setDoc para consistência
+  // Funções existentes (create, update, delete)
   const addProduct = useCallback(async (product: NewProduct) => {
     try {
       const newDocRef = doc(collection(db, 'products'));
@@ -142,10 +142,31 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const markAsSold = useCallback(async (productId: string) => {
     try {
         const productRef = doc(db, 'products', productId);
+        const productSnap = await getDoc(productRef);
+        
+        if (!productSnap.exists()) throw new Error("Produto não encontrado.");
+        const productData = productSnap.data() as Product;
+
+        // 1. ATUALIZAR STATUS DO PRODUTO
         await updateDoc(productRef, { status: 'vendido' });
         setProducts(prev => prev.map(p => p.id === productId ? {...p, status: 'vendido'} : p));
+        
+        // 2. CRIAR REGISTO DE VENDA (Simulando uma venda para o Histórico)
+        // Usar um ID fictício do comprador e nome, pois não o temos nesta etapa
+        const MOCK_BUYER_ID = 'MOCK_USER_COMPRA'; 
+        const MOCK_BUYER_NAME = 'Comprador Simulado';
+
+        await addDoc(collection(db, 'sales'), {
+            productName: productData.name,
+            price: productData.price,
+            sellerId: productData.userId,
+            buyerId: MOCK_BUYER_ID,
+            buyerName: MOCK_BUYER_NAME,
+            date: serverTimestamp(),
+        });
+        
     } catch (error) {
-        console.error("Erro ao marcar como vendido:", error);
+        console.error("Erro ao marcar como vendido ou registar venda:", error);
         throw error;
     }
   }, []);

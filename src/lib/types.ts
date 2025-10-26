@@ -1,3 +1,5 @@
+// src/lib/types.ts
+
 import { Timestamp } from "firebase/firestore";
 
 export type Notification = {
@@ -15,7 +17,7 @@ export type Product = {
   description: string;
   price: number;
   condition: 'Novo' | 'Muito bom' | 'Bom';
-  category: 'Roupa' | 'Calçado' | 'Livros' | 'Eletrónica' | 'Móveis' | 'Decoração' | 'Esportes' | 'Jogos' | 'Arte' | 'Outro';
+  category: 'Roupa' | 'Calçado' | 'Livros' | 'Eletrónica' | 'Outro';
   imageUrls: string[];
   imageHint: string;
   userEmail: string;
@@ -74,6 +76,7 @@ export type Conversation = {
     createdAt: Timestamp;
 };
 
+// TIPO AppUser (CORRIGIDO: Extendido com novos campos e createdAt)
 export interface AppUser {
   uid: string;
   email: string | null;
@@ -82,4 +85,30 @@ export interface AppUser {
   preferredBrands?: string[];
   preferredSizes?: string[];
   walletBalance?: number;
+  bio?: string;
+  location?: string;
+  phone?: string;
+  photoURL?: string;
+  createdAt?: Timestamp; // Adicionado para a data de registo
 }
+
+// NOVOS TIPOS PARA HISTÓRICO (para a aba de Transações)
+export type Sale = {
+    id: string;
+    productName: string;
+    price: number;
+    sellerId: string;
+    buyerId: string;
+    buyerName: string;
+    date: Timestamp;
+};
+
+export type Purchase = {
+    id: string;
+    productName: string;
+    price: number;
+    sellerId: string;
+    sellerName: string;
+    buyerId: string;
+    date: Timestamp;
+};

@@ -1,4 +1,4 @@
-# **App Name**: SecondWave
+# **App Name**: Rewear
 
 ## Core Features:
 

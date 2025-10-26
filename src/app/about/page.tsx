@@ -32,7 +32,7 @@ export default function AboutPage() {
                     A mudar a forma como pensamos a moda.
                 </h1>
                 <p className="mt-6 max-w-2xl mx-auto text-lg leading-8 text-muted-foreground">
-                    A SecondWave nasceu de uma ideia simples: dar uma segunda oportunidade a cada artigo e criar um impacto positivo no mundo, uma venda de cada vez.
+                    A Rewear nasceu de uma ideia simples: dar uma segunda oportunidade a cada artigo e criar um impacto positivo no mundo, uma venda de cada vez. {/* <-- ALTERADO */}
                 </p>
             </div>
         </section>

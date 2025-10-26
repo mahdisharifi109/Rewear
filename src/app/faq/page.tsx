@@ -13,12 +13,12 @@ import { Button } from "@/components/ui/button"; // IMPORTAÇÃO ADICIONADA
 // Lista de perguntas e respostas mais completa
 const faqs = [
   {
-    question: "Como posso vender um artigo na SecondWave?",
+    question: "Como posso vender um artigo na Rewear?", // <-- ALTERADO
     answer: "É muito simples! Clique no botão 'Vender' no topo da página, preencha os detalhes do seu produto (título, descrição, preço, etc.), carregue uma ou mais fotografias de qualidade e publique o seu anúncio. Ficará imediatamente disponível no nosso catálogo."
   },
   {
     question: "Quais são os métodos de pagamento aceites?",
-    answer: "Atualmente, todas as transações na SecondWave são simuladas para fins desta Prova de Aptidão Profissional. Não processamos pagamentos reais. Numa versão futura, implementaríamos integrações com gateways de pagamento seguros como Stripe ou PayPal."
+    answer: "Atualmente, todas as transações na Rewear são simuladas para fins desta Prova de Aptidão Profissional. Não processamos pagamentos reais. Numa versão futura, implementaríamos integrações com gateways de pagamento seguros como Stripe ou PayPal." // <-- ALTERADO
   },
   {
     question: "É seguro comprar e vender na plataforma?",
@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     question: "O que acontece quando marco um artigo como 'Vendido'?",
-    answer: "Ao marcar um artigo como vendido, ele deixa de estar visível no catálogo público e no seu perfil. O valor da venda é (simuladamente) adicionado ao saldo da sua Carteira SecondWave, e essa transação aparecerá no seu Dashboard de Vendedor."
+    answer: "Ao marcar um artigo como vendido, ele deixa de estar visível no catálogo público e no seu perfil. O valor da venda é (simuladamente) adicionado ao saldo da sua Carteira Rewear, e essa transação aparecerá no seu Dashboard de Vendedor." // <-- ALTERADO
   }
 ];
 
@@ -48,7 +48,7 @@ export default function FAQPage() {
                 Centro de Ajuda
                 </h1>
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                Encontre respostas para as perguntas mais comuns sobre a SecondWave.
+                Encontre respostas para as perguntas mais comuns sobre a Rewear. {/* <-- ALTERADO */}
                 </p>
             </div>
 

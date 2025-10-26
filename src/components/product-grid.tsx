@@ -5,7 +5,7 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import ProductCard from "@/components/product-card";
+import dynamic from "next/dynamic";
 import { useProducts } from "@/context/product-context";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,12 @@ const ProductCardSkeleton = () => (
     <Skeleton className="h-5 w-1/2" />
   </div>
 );
+
+// Dynamic import com fallback
+const DynamicProductCard = dynamic(() => import('@/components/product-card'), {
+  ssr: false,
+  loading: () => <ProductCardSkeleton />,
+});
 
 interface ProductGridProps {
   personalized?: boolean;
@@ -40,14 +46,17 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
   }, [isLoadingMore, hasMoreProducts, loadMoreProducts]);
 
   // Observer para o scroll infinito
-  const lastProductElementRef = useCallback((node: HTMLDivElement) => { // <-- A CORREÇÃO ESTÁ AQUI
+  const lastProductElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isLoadingMore) return;
     if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMoreProducts) {
-        handleLoadMore();
-      }
-    });
+    observer.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMoreProducts && !isLoadingMore) {
+          handleLoadMore();
+        }
+      },
+      { root: null, rootMargin: "400px", threshold: 0.1 } // rootMargin adicionado
+    );
     if (node) observer.current.observe(node);
   }, [isLoadingMore, hasMoreProducts, handleLoadMore]);
 
@@ -108,9 +117,9 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product, index) => {
               if (filteredProducts.length === index + 1 && showLoadMore) {
-                return <div ref={lastProductElementRef} key={product.id}><ProductCard product={product} /></div>
+                return <div ref={lastProductElementRef} key={product.id}><DynamicProductCard product={product} /></div>
               }
-              return <ProductCard key={product.id} product={product} />
+              return <DynamicProductCard key={product.id} product={product} />
             })}
           </div>
           {isLoadingMore && (

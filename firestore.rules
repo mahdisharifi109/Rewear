@@ -1,28 +1,33 @@
-// firestore.rules
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
     match /products/{productId} {
       allow read: if request.auth != null;
-      
-      // Permite criar apenas se o utilizador estiver autenticado, for o dono do produto
-      // e se os campos forem exatamente os esperados.
+
+      // Regra de Criação (CORRIGIDA): Agora verifica apenas os campos obrigatórios
+      // e valida os seus tipos/valores.
       allow create: if request.auth != null 
                     && request.auth.uid == request.resource.data.userId
-                    && request.resource.data.keys().hasAll(['name', 'description', 'price', 'condition', 'category', 'imageUrls', 'imageHint', 'userEmail', 'userName', 'userId', 'quantity', 'brand', 'material', 'sizes', 'status', 'createdAt'])
                     && request.resource.data.name is string && request.resource.data.name.size() > 5
+                    && request.resource.data.description is string && request.resource.data.description.size() > 10
                     && request.resource.data.price is number && request.resource.data.price > 0
-                    && request.resource.data.quantity is number && request.resource.data.quantity > 0;
-
-      // Permite atualizar apenas se o utilizador for o dono e apenas campos específicos podem ser alterados.
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+                    && request.resource.data.quantity is number && request.resource.data.quantity > 0
+                    && request.resource.data.category in ['Roupa', 'Calçado', 'Livros', 'Eletrónica', 'Outro']
+                    && request.resource.data.condition in ['Novo', 'Muito bom', 'Bom']
+                    && request.resource.data.imageUrls is list && request.resource.data.imageUrls.size() > 0
+                    // Exigir a presença dos campos obrigatórios
+                    && request.resource.data.keys().hasAll(['userId', 'name', 'description', 'price', 'quantity', 'category', 'condition', 'imageUrls']);
+        
+      // Regra de Atualização (REFINADA): Permite ao dono atualizar e garante a transição de status para 'vendido'
+      allow update: if request.auth != null 
+                    && request.auth.uid == resource.data.userId
+                    // Permite a alteração de qualquer campo, mas restringe a alteração do 'status' para 'vendido'
+                    && (request.resource.data.status == 'vendido' || request.resource.data.status == resource.data.status); 
       
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
-    // As suas outras regras (users, reviews, notifications, etc.) já são um bom ponto de partida.
     match /users/{userId} {
       allow read, update, create: if request.auth != null && request.auth.uid == userId;
     }

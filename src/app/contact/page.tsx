@@ -19,7 +19,7 @@ export default function ContactPage() {
     // SUBSTITUI ESTE EMAIL PELO TEU EMAIL PESSOAL OU PROFISSIONAL
     const recipientEmail = "0523072@alunos.epb.pt"; 
     
-    const subject = `Nova Mensagem de ${name} - SecondWave`;
+    const subject = `Nova Mensagem de ${name} - Rewear`; // <-- ALTERADO
     const body = `Nome: ${name}\nEmail: ${email}\n\nMensagem:\n${message}`;
 
     // Cria o link mailto:

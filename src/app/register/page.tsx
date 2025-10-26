@@ -42,7 +42,7 @@ export default function RegisterPage() {
 
       toast({
         title: "Conta Criada!",
-        description: "Bem-vindo à SecondWave!",
+        description: "Bem-vindo à Rewear!", // <-- ALTERADO
       });
       router.push('/');
 
@@ -67,7 +67,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle>Criar Conta</CardTitle>
-          <CardDescription>Junte-se à SecondWave e comece a comprar e vender.</CardDescription>
+          <CardDescription>Junte-se à Rewear e comece a comprar e vender.</CardDescription> {/* <-- ALTERADO */}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
