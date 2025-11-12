@@ -37,7 +37,7 @@ export function SelectOrInput({ options, value, onChange, placeholder, id }: Sel
   };
 
   return (
-    <div className="space-y-2">
+  <div className="space-y-2 bg-accent/20 rounded-md p-2">
       <Select onValueChange={handleSelectChange} value={selectedValue}>
         {/* O id é passado para o SelectTrigger para se conectar à Label */}
         <SelectTrigger id={id}>

@@ -1,12 +1,13 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Header } from '@/components/header';
-import { Footer } from '@/components/footer';
 import { CartProvider } from '@/context/cart-context';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/context/auth-context';
 import { ProductProvider } from '@/context/product-context';
 import { Suspense } from 'react';
+import { Inter } from 'next/font/google';
+import { ClientOnlyFooter } from '@/components/client-only-footer';
 
 export const metadata: Metadata = {
   title: 'Rewear', // <-- ALTERADO
@@ -17,35 +18,37 @@ function PageFallback() {
   return <div className="flex-1" />;
 }
 
+// Fonts (avaliadas em build, não em runtime)
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="pt" className={`${inter.variable}`}>
+      <head></head>
       {/* O body agora está limpo, sem classes de overflow */}
-      <body className="font-body antialiased">
+      <body className="font-sans antialiased">
         <AuthProvider>
-          <ProductProvider>
-            <CartProvider>
-              <div className="flex min-h-screen flex-col">
-                <Header />
-                <main className="flex-1">
-                  <Suspense fallback={<PageFallback />}>
-                    {children}
-                  </Suspense>
-                </main>
-                <Footer />
-              </div>
-              <Toaster />
-            </CartProvider>
-          </ProductProvider>
+          <Suspense fallback={<PageFallback />}>
+            <ProductProvider>
+              <CartProvider>
+                <div className="flex min-h-screen flex-col">
+                  <Header />
+                  <main className="flex-1">
+                    <Suspense fallback={<PageFallback />}>
+                      {children}
+                    </Suspense>
+                  </main>
+                  <ClientOnlyFooter />
+                </div>
+                <Toaster />
+              </CartProvider>
+            </ProductProvider>
+          </Suspense>
         </AuthProvider>
       </body>
     </html>

@@ -31,6 +31,8 @@ export default function CartPage() {
                       alt={item.product.name}
                       width={112}
                       height={112}
+                      loading="lazy"
+                      sizes="(max-width: 640px) 96px, 112px"
                       className="h-full w-full object-cover object-center"
                     />
                   </div>
@@ -95,6 +97,21 @@ export default function CartPage() {
           <h3 className="mt-4 text-xl font-semibold">O seu carrinho está vazio</h3>
           <p className="mt-2 text-muted-foreground">Explore os nossos produtos e encontre algo que goste!</p>
           <Button asChild className="mt-6"><Link href="/">Procurar Produtos</Link></Button>
+        </div>
+      )}
+
+      {/* Mobile sticky CTA */}
+      {cartCount > 0 && (
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 shadow-lg">
+          <div className="mx-auto max-w-7xl flex items-center justify-between gap-4">
+            <div className="text-sm">
+              <p className="font-medium">Total</p>
+              <p className="text-muted-foreground">{total.toFixed(2)}€</p>
+            </div>
+            <Button asChild size="lg" className="flex-1">
+              <Link href="/checkout">Finalizar Compra</Link>
+            </Button>
+          </div>
         </div>
       )}
     </div>

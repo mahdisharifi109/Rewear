@@ -19,7 +19,8 @@ interface CartContextType {
   total: number; 
   isVerificationEnabled: boolean; 
   toggleVerification: () => void;
-  finalizeCheckout: (buyer: AppUser, checkoutData: any) => Promise<void>; // ADICIONADO
+  // finalizeCheckout removido
+  createSecureCheckoutPayload?: () => { cartItems: CartItem[]; isVerificationEnabled: boolean; subtotal: number; total: number };
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -70,69 +71,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
   
   // FUNÇÃO PRINCIPAL DO CHECKOUT
-  const finalizeCheckout = useCallback(async (buyer: AppUser, checkoutData: any) => {
-    const batch = writeBatch(db);
-    const timestamp = serverTimestamp();
-    const isVerified = isVerificationEnabled;
-    
-    for (const item of cartItems) {
-        const productRef = doc(db, 'products', item.product.id);
-        
-        // 1. Criar Registo de Compra (Para o Histórico do Comprador)
-        const purchaseRef = doc(collection(db, 'purchases'));
-        batch.set(purchaseRef, {
-            buyerId: buyer.uid,
-            buyerName: buyer.name,
-            sellerId: item.product.userId,
-            sellerName: item.product.userName,
-            productName: item.product.name,
-            price: item.product.price,
-            quantity: item.quantity,
-            isVerified: isVerified,
-            date: timestamp,
-        });
 
-        // 2. Criar Registo de Venda (Para o Histórico do Vendedor)
-        const saleRef = doc(collection(db, 'sales'));
-        batch.set(saleRef, {
-            buyerId: buyer.uid,
-            buyerName: buyer.name,
-            sellerId: item.product.userId,
-            sellerName: item.product.userName,
-            productName: item.product.name,
-            price: item.product.price,
-            quantity: item.quantity,
-            isVerified: isVerified,
-            date: timestamp,
-        });
-        
-        // 3. Atualizar o Produto (Diminuir stock ou marcar como vendido se quantidade for 1)
-        if (item.product.quantity === item.quantity) {
-             batch.update(productRef, { status: 'vendido', quantity: 0 });
-        } else {
-             batch.update(productRef, { quantity: item.product.quantity - item.quantity });
-        }
-        
-        // 4. Se a verificação estiver ativa, notificar o vendedor
-        if (isVerified) {
-             const notificationRef = doc(collection(db, 'notifications'));
-             batch.set(notificationRef, {
-                 userId: item.product.userId, // Vendedor
-                 message: `O artigo "${item.product.name}" foi vendido com verificação ativada. Verifique os detalhes.`,
-                 link: `/dashboard`,
-                 read: false,
-                 createdAt: timestamp,
-             });
-        }
-    }
-    
-    // 5. Commit de todas as operações
-    await batch.commit();
-
-    // 6. Limpar o carrinho local após o sucesso
-    clearCart();
-
-  }, [cartItems, clearCart, isVerificationEnabled]);
+  // Função para criar payload seguro para o backend
+  function createSecureCheckoutPayload() {
+    return {
+      cartItems,
+      isVerificationEnabled,
+      subtotal,
+      total,
+    };
+  }
   
   
   const cartCount = useMemo(() => {
@@ -152,19 +100,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [subtotal, verificationFee]);
 
   const value = useMemo(() => ({
-    cartItems,
-    addToCart,
-    removeFromCart,
-    updateItemQuantity,
-    clearCart,
-    cartCount,
-    subtotal,
-    verificationFee,
-    total,
-    isVerificationEnabled,
-    toggleVerification,
-    finalizeCheckout,
-  }), [cartItems, addToCart, removeFromCart, updateItemQuantity, clearCart, cartCount, subtotal, verificationFee, total, isVerificationEnabled, toggleVerification, finalizeCheckout]);
+  cartItems,
+  addToCart,
+  removeFromCart,
+  updateItemQuantity,
+  clearCart,
+  cartCount,
+  subtotal,
+  verificationFee,
+  total,
+  isVerificationEnabled,
+  toggleVerification,
+  createSecureCheckoutPayload: createSecureCheckoutPayload,
+  }), [cartItems, addToCart, removeFromCart, updateItemQuantity, clearCart, cartCount, subtotal, verificationFee, total, isVerificationEnabled, toggleVerification]);
 
   return (
     <CartContext.Provider value={value}>
@@ -178,5 +126,9 @@ export function useCart() {
   if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider');
   }
-  return context;
+  // Garante que createSecureCheckoutPayload existe antes de retornar
+  return {
+    ...context,
+    ...(context && typeof context.createSecureCheckoutPayload === 'function' ? { createSecureCheckoutPayload: context.createSecureCheckoutPayload } : {}),
+  };
 }

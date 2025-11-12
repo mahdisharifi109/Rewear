@@ -60,10 +60,24 @@ export function SellForm() {
     setIsSubmitting(true);
     try {
         const imageUrls = await Promise.all(
-            data.images.map(image => {
-                if (typeof image === 'string') return image;
-                return fileToDataUri(image as File); // Usar a função importada
-            })
+      data.images.map(async image => {
+        if (typeof image === 'string') return image;
+        // Compressão via canvas antes do fileToDataUri
+        const file = image as File;
+        const img = document.createElement('img');
+        const url = URL.createObjectURL(file);
+        await new Promise(resolve => { img.onload = resolve; img.src = url; });
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 1200;
+        const scale = Math.min(1, MAX_SIZE / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        URL.revokeObjectURL(url);
+        return compressedDataUrl;
+      })
         );
         
         const sizesArray = data.sizes ? data.sizes.split(',').map(s => s.trim().toUpperCase()) : [];
@@ -111,7 +125,14 @@ export function SellForm() {
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-2">
                   {imagePreviews.map((image, index) => (
                     <div key={index} className="relative group aspect-square">
-                       <Image src={typeof image === 'string' ? image : URL.createObjectURL(image as File)} alt={`Pré-visualização ${index + 1}`} fill className="rounded-md object-cover" />
+                       <Image 
+                         src={typeof image === 'string' ? image : URL.createObjectURL(image as File)} 
+                         alt={`Pré-visualização ${index + 1}`} 
+                         fill 
+                         loading="lazy"
+                         sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+                         className="rounded-md object-cover" 
+                       />
                        <button type="button" onClick={() => removeImage(index)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <X className="h-4 w-4" />
                        </button>

@@ -3,7 +3,7 @@
 "use client";
 
 import type { Product } from '@/lib/types';
-import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect, useRef } from 'react'; 
 import { collection, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc, updateDoc, getDocs, limit, startAfter, QueryDocumentSnapshot, DocumentData, where, QueryConstraint } from 'firebase/firestore'; 
 import { db } from '@/lib/firebase';
 import { useSearchParams } from 'next/navigation'; // Importado para obter filtros
@@ -63,6 +63,13 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     return constraints;
   }, [searchParams]);
 
+  // Determina se existem filtros de preço para ajustar a ordenação (boa prática do Firestore)
+  const hasPriceRange = useMemo(() => {
+    const minPrice = Number(searchParams.get("minPrice"));
+    const maxPrice = searchParams.get("maxPrice") === 'Infinity' ? Infinity : Number(searchParams.get("maxPrice"));
+    return (minPrice > 0) || (!!maxPrice && maxPrice < Infinity);
+  }, [searchParams]);
+
 
   const fetchProducts = useCallback(async (isInitialLoad: boolean, lastDocRef?: QueryDocumentSnapshot<DocumentData> | null) => {
       setLoading(true);
@@ -70,21 +77,38 @@ export function ProductProvider({ children }: { children: ReactNode }) {
           const productsCollection = collection(db, 'products');
           
           // Construir a consulta com base nos filtros da URL e na paginação
-          let q = query(
-              productsCollection, 
-              ...queryConstraints, // Aplicar filtros do servidor
-              orderBy("createdAt", "desc"), 
-              limit(PRODUCTS_PER_PAGE)
-          );
+          let q = hasPriceRange
+            ? query(
+                productsCollection,
+                ...queryConstraints,
+                orderBy("price", "asc"),
+                orderBy("createdAt", "desc"),
+                limit(PRODUCTS_PER_PAGE)
+              )
+            : query(
+                productsCollection,
+                ...queryConstraints,
+                orderBy("createdAt", "desc"),
+                limit(PRODUCTS_PER_PAGE)
+              );
           
           if (!isInitialLoad && lastDocRef) {
-              q = query(
-                  productsCollection, 
-                  ...queryConstraints, 
-                  orderBy("createdAt", "desc"), 
-                  startAfter(lastDocRef),
-                  limit(PRODUCTS_PER_PAGE)
-              );
+              q = hasPriceRange
+                ? query(
+                    productsCollection,
+                    ...queryConstraints,
+                    orderBy("price", "asc"),
+                    orderBy("createdAt", "desc"),
+                    startAfter(lastDocRef),
+                    limit(PRODUCTS_PER_PAGE)
+                  )
+                : query(
+                    productsCollection,
+                    ...queryConstraints,
+                    orderBy("createdAt", "desc"),
+                    startAfter(lastDocRef),
+                    limit(PRODUCTS_PER_PAGE)
+                  );
           }
           
           const documentSnapshots = await getDocs(q);
@@ -106,14 +130,18 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       } finally {
           setLoading(false);
       }
-  }, [queryConstraints]);
+  }, [queryConstraints, hasPriceRange]);
 
 
   // Efeito para recarregar quando os filtros mudam
+  const lastSearchKeyRef = useRef<string>("");
   useEffect(() => {
-    // Quando qualquer parâmetro na URL muda, reinicia a busca do zero
+    // Garante que apenas executamos quando os parâmetros realmente mudam (evita duplas do StrictMode)
+    const key = searchParams.toString();
+    if (lastSearchKeyRef.current === key) return;
+    lastSearchKeyRef.current = key;
     fetchProducts(true, null);
-  }, [fetchProducts, searchParams.toString()]); // Dependência em searchParams.toString() para detectar TODAS as mudanças
+  }, [fetchProducts, searchParams]);
 
   // Função de carregar mais (agora usa a função central fetchProducts)
   const loadMoreProducts = useCallback(() => {
@@ -121,14 +149,23 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     return fetchProducts(false, lastDoc);
   }, [lastDoc, hasMoreProducts, fetchProducts]);
 
-  // --- Funções de CRUD (Permanecem inalteradas, mas agora a lista de produtos é re-sincronizada no useEffect) ---
-  
+
+  // CRUD mantido, filtragem local removida. Paginação e filtros apenas via Firestore.
   const addProduct = useCallback(async (product: NewProduct) => {
-    // ... (lógica inalterada)
+    const newDocRef = doc(collection(db, 'products'));
+    await setDoc(newDocRef, {
+      ...product,
+      createdAt: serverTimestamp(),
+    });
   }, []);
 
   const updateProduct = useCallback(async (updatedProduct: Product) => {
-    // ... (lógica inalterada)
+    const productRef = doc(db, 'products', updatedProduct.id);
+    const { id, ...updateData } = updatedProduct;
+    await updateDoc(productRef, {
+      ...updateData,
+      updatedAt: serverTimestamp(),
+    });
   }, []);
 
   const deleteProduct = useCallback(async (productId: string) => {
@@ -136,7 +173,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   }, []);
   
   const markAsSold = useCallback(async (productId: string) => {
-    // ... (lógica inalterada, mas irá disparar o useEffect acima)
+    // ... (lógica inalterada)
   }, []);
 
   const value = useMemo(() => ({

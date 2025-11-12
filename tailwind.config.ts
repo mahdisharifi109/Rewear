@@ -10,8 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Garantir que a fonte 'Inter' é a principal para o corpo e títulos
-        sans: ['Inter', 'sans-serif'], 
+        // Usar variáveis geradas por next/font para evitar bloqueio de renderização
+        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-sans)', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',

@@ -9,6 +9,7 @@ import { DollarSign, Package, Star } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Review } from '@/lib/types';
+import { StarRating } from '@/components/ui/star-rating';
 
 export function SellerDashboard() {
   const { user } = useAuth();
@@ -158,6 +159,32 @@ export function SellerDashboard() {
             )}
         </CardContent>
       </Card>
+
+      {/* Últimas Avaliações */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-4">Últimas Avaliações</h2>
+        {loadingReviews ? (
+          <p className="text-muted-foreground">Carregando avaliações...</p>
+        ) : reviews.length === 0 ? (
+          <p className="text-muted-foreground">Nenhuma avaliação recebida ainda.</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {reviews.slice(0, 3).map((review) => (
+              <Card key={review.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">{review.buyerName}</span>
+                    <StarRating rating={review.rating} />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{review.comment}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

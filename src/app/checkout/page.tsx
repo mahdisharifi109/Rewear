@@ -85,8 +85,8 @@ export default function CheckoutPage() {
     const { cartCount, router, } = useCheckoutGuard();
     const { toast } = useToast();
     const { user } = useAuth(); // OBTER USER PARA A TRANSAÇÃO
-    const { finalizeCheckout, clearCart } = useCart(); // OBTER finalizeCheckout
-    const [isProcessing, setIsProcessing] = useState(false); // <-- useState é usado aqui
+    const { clearCart, total, isVerificationEnabled, createSecureCheckoutPayload } = useCart();
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const { control, handleSubmit, formState: { errors } } = useForm<CheckoutFormValues>({
         resolver: zodResolver(checkoutSchema),
@@ -109,10 +109,28 @@ export default function CheckoutPage() {
 
         setIsProcessing(true);
         try {
-            await finalizeCheckout(user, data); // CHAMADA DA FUNÇÃO DE TRANSAÇÃO
-
-            toast({ title: "Compra Realizada com Sucesso!", description: "Obrigado pela sua compra simulada. O histórico foi atualizado." });
-            router.push('/profile'); // Redireciona para o perfil/histórico
+            let cartPayload = {};
+            if (typeof createSecureCheckoutPayload === 'function') {
+                cartPayload = createSecureCheckoutPayload();
+            }
+            const payload = {
+                userId: user.uid,
+                checkoutData: data,
+                ...cartPayload,
+            };
+            const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await res.json();
+            if (result.success) {
+                clearCart();
+                toast({ title: "Compra Realizada com Sucesso!", description: "Obrigado pela sua compra. O histórico foi atualizado." });
+                router.push('/profile');
+            } else {
+                toast({ variant: "destructive", title: "Erro de Transação", description: result.error || "Não foi possível finalizar a compra. Tente novamente." });
+            }
         } catch (error) {
             console.error("Erro no checkout:", error);
             toast({ variant: "destructive", title: "Erro de Transação", description: "Não foi possível finalizar a compra. Tente novamente." });
@@ -158,7 +176,8 @@ export default function CheckoutPage() {
                         </Card>
                         <Button type="submit" size="lg" className="w-full" disabled={isProcessing}>
                             {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <CheckCircle className="ml-2 h-5 w-5" />}
-                            Pagar e Finalizar Encomenda 
+                            {`Pagar ${total.toFixed(2)}€ e Finalizar Encomenda`}
+                            {isVerificationEnabled ? " (Com Verificação)" : ""}
                         </Button>
                     </div>
                     <div className="lg:col-span-1"><OrderSummary /></div>

@@ -1,9 +1,9 @@
 import { ProductGrid } from "@/components/product-grid";
-import { HowItWorks } from "@/components/how-it-works";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Suspense } from "react";
+import { ClientOnlyHowItWorks } from "@/components/client-only-how-it-works";
 
 function ProductGridFallback() {
   return (
@@ -23,9 +23,9 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-primary/10">
+  <section className="bg-primary/10">
         <div className="container px-4 sm:px-6 lg:px-8 py-20 md:py-24 text-center">
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight font-heading">
               Dê uma segunda vida à sua roupa.
             </h1>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -51,7 +51,7 @@ export default function Home() {
       {/* Promotional Video Section */}
       <section className="py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold tracking-tight mb-8">Veja como é fácil!</h2>
+          <h2 className="text-3xl font-bold tracking-tight mb-8 font-heading">Veja como é fácil!</h2>
           <video
             className="rounded-lg shadow-xl mx-auto"
             src="https://storage.googleapis.com/gemini-generative-ai-public-supported-storage/assets/promotional_video_secondwave.mp4"
@@ -68,7 +68,7 @@ export default function Home() {
       </section>
 
       {/* Secção "Como Funciona" */}
-      <HowItWorks />
+  <ClientOnlyHowItWorks />
     </>
   );
 }

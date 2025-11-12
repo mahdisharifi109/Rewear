@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useProducts } from '@/context/product-context';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/cart-context';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
@@ -39,6 +40,7 @@ export default function ProductDetailPage() {
 
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
   const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   // REMOVIDO: useState para isAIVideoLoading e aiVideoUrl
   // const [isAIVideoLoading, setIsAIVideoLoading] = useState(false);
   // const [aiVideoUrl, setAiVideoUrl] = useState<string | null>(null);
@@ -52,9 +54,9 @@ export default function ProductDetailPage() {
   const isAddToCartDisabled = (hasSizes && !selectedSize) || !!isOwner || product.quantity < 1;
 
   const handleAddToCart = () => {
-    if (isAddToCartDisabled) return;
-    addToCart({ product, quantity: 1, size: selectedSize });
-    toast({ title: "Adicionado ao carrinho", description: `${product.name} foi adicionado.` });
+  if (isAddToCartDisabled) return;
+  addToCart({ product, quantity, size: selectedSize });
+  toast({ title: "Adicionado ao carrinho", description: `${product.name} foi adicionado. Quantidade: ${quantity}` });
   };
 
   const handleFavoriteClick = async () => {
@@ -179,10 +181,23 @@ export default function ProductDetailPage() {
                       <Button size="lg" className="w-full" onClick={() => router.push(`/product/${product.id}/edit`)}>Editar Anúncio</Button>
                   ) : (
                     <>
+                      <div className="mb-2">
+                        <Label htmlFor="quantity" className="text-base font-medium">Quantidade</Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          min={1}
+                          max={product.quantity}
+                          value={quantity}
+                          onChange={e => setQuantity(Math.max(1, Math.min(product.quantity, Number(e.target.value))))}
+                          className="mt-1 w-full"
+                          disabled={product.quantity < 1}
+                        />
+                      </div>
                       <Button size="lg" className="w-full" onClick={handleAddToCart} disabled={isAddToCartDisabled}>
                           {product.quantity < 1 ? "Esgotado" : (isAddToCartDisabled ? "Selecione um tamanho" : "Adicionar ao Carrinho")}
                       </Button>
-                       <Button size="lg" variant="outline" className="w-full" onClick={handleContactSeller} disabled={isCreatingChat}>
+                      <Button size="lg" variant="outline" className="w-full" onClick={handleContactSeller} disabled={isCreatingChat}>
                           {isCreatingChat ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <MessageSquare className="mr-2 h-5 w-5" />}
                           Contactar Vendedor
                       </Button>

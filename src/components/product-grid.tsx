@@ -101,12 +101,12 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
       </div>
 
       {initialLoading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
         </div>
       ) : filteredProducts.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product, index) => {
               if (filteredProducts.length === index + 1 && showLoadMore) {
                 return <div ref={lastProductElementRef} key={product.id}><DynamicProductCard product={product} /></div>

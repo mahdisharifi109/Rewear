@@ -1,4 +1,6 @@
+
 "use client";
+import { cn } from '@/lib/utils';
 
 import Image from "next/image";
 import Link from "next/link";
@@ -87,7 +89,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Card
       onClick={handleCardClick}
-      className="flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg h-full cursor-pointer group"
+      className={cn(
+        "flex flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg h-full cursor-pointer group",
+        product.status === 'vendido' && "opacity-70 grayscale"
+      )}
     >
       <div className="flex-grow">
         <CardHeader className="p-0 border-b">
@@ -96,6 +101,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               src={product.imageUrls[0]}
               alt={product.name}
               fill
+              loading="lazy"
+              fetchPriority="low"
+              sizes="(max-width: 768px) 50vw, 33vw"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
              {product.status === 'vendido' && (
@@ -108,7 +116,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-lg font-semibold leading-tight group-hover:text-primary">{product.name}</CardTitle>
-            <div className="text-lg font-bold text-primary whitespace-nowrap">{product.price.toFixed(2)}€</div>
+            <div className="text-lg font-bold text-primary/80 whitespace-nowrap">{product.price.toFixed(2)}€</div>
           </div>
           <div className="mt-2 flex items-center gap-2 flex-wrap">
             {product.isVerified && (

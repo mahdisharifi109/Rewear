@@ -25,6 +25,7 @@ export type Product = {
   userId: string;
   quantity: number;
   createdAt?: Timestamp;
+  updatedAt?: Timestamp;
   sizes?: string[];
   brand?: string;
   material?: string;
