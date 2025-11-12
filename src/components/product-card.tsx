@@ -111,7 +111,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               loading="lazy"
               fetchPriority="low"
               sizes="(max-width: 768px) 50vw, 33vw"
-              className="object-cover transition-organic group-hover:scale-110"
+              className="object-cover transition-organic group-hover:scale-110 motion-reduce:transition-none motion-reduce:transform-none"
             />
              {product.status === 'vendido' && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">

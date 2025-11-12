@@ -52,9 +52,9 @@ export default function FavoritesPage() {
             {favoriteProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                     {favoriteProducts.map(product => (
-                        <div
+                                                <div
                           key={product.id}
-                          className="shadow-soft rounded-xl bg-background p-2 transition-smooth hover:shadow-elevated hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary/40"
+                                                    className="shadow-soft rounded-xl bg-background p-2 transition-smooth hover:shadow-elevated hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary/40 motion-reduce:transition-none motion-reduce:transform-none"
                         >
                             <ProductCard product={product} />
                         </div>
