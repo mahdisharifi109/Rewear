@@ -42,28 +42,29 @@ export default function FavoritesPage() {
     }
 
     return (
-        <div className="container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Os Seus Favoritos</h1>
-                <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                    Os artigos que guardou para ver mais tarde.
-                </p>
+        <div className="container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 space-y-10">
+            <div className="flex flex-col items-center mb-8">
+                <Heart className="h-14 w-14 text-primary mb-2" />
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-2">Os Seus Favoritos</h1>
+                <p className="max-w-2xl text-lg text-muted-foreground text-center">Os artigos que guardou para ver mais tarde.</p>
             </div>
 
             {favoriteProducts.length > 0 ? (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                     {favoriteProducts.map(product => (
-                        <ProductCard key={product.id} product={product} />
+                        <div key={product.id} className="shadow-soft rounded-xl bg-background p-2 transition-shadow hover:shadow-elevated">
+                            <ProductCard product={product} />
+                        </div>
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                    <Heart className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-xl font-semibold">A sua lista de favoritos está vazia</h3>
-                    <p className="mt-2 text-muted-foreground">
+                <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed rounded-xl bg-muted/40">
+                    <Heart className="h-14 w-14 text-muted-foreground mb-2" />
+                    <h3 className="text-xl font-semibold mb-2">A sua lista de favoritos está vazia</h3>
+                    <p className="text-muted-foreground mb-4 text-center">
                         Clique no coração nos artigos que gostar para os guardar aqui.
                     </p>
-                    <Button asChild className="mt-6">
+                    <Button asChild className="mt-2">
                         <Link href="/">Procurar Artigos</Link>
                     </Button>
                 </div>

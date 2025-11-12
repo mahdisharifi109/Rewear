@@ -89,15 +89,15 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Definições da Conta</h1>
-        <p className="text-muted-foreground">Gira as tuas informações pessoais e preferências da plataforma.</p>
+    <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 space-y-10">
+      <div className="flex flex-col items-center mb-6">
+        <h1 className="text-3xl font-bold mb-2">Definições da Conta</h1>
+        <p className="text-muted-foreground text-center max-w-md">Gira as tuas informações pessoais e preferências da plataforma.</p>
       </div>
-      
+
       <form onSubmit={handleSaveChanges} className="space-y-8">
         {/* Secção de Detalhes do Perfil */}
-        <Card>
+        <Card className="shadow-soft rounded-xl">
           <CardHeader>
             <CardTitle>Detalhes do Perfil</CardTitle>
             <CardDescription>Informações básicas sobre a sua conta.</CardDescription>
@@ -118,7 +118,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* Secção de Personalização */}
-        <Card>
+        <Card className="shadow-soft rounded-xl">
           <CardHeader>
             <CardTitle>Personalização do Feed</CardTitle>
             <CardDescription>Escolha as suas marcas e tamanhos preferidos para ver os artigos que mais lhe interessam.</CardDescription>
@@ -148,8 +148,9 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
-        
-        <CardFooter className="flex justify-between items-center px-0">
+
+        {/* Secção de Ações */}
+        <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 px-0 mt-2">
             <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button variant="destructive">Eliminar Conta</Button>
@@ -165,7 +166,7 @@ export default function SettingsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <Button type="submit" disabled={isSaving}>
+            <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Guardar Alterações
             </Button>
