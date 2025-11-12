@@ -89,8 +89,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Card
       onClick={handleCardClick}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+        }
+      }}
       className={cn(
-        "flex flex-col overflow-hidden transition-smooth hover:shadow-floating hover:-translate-y-1 h-full cursor-pointer group border-border/50",
+        "flex flex-col overflow-hidden transition-smooth hover:shadow-floating hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 h-full cursor-pointer group border-border/50",
         product.status === 'vendido' && "opacity-60 grayscale"
       )}
     >
