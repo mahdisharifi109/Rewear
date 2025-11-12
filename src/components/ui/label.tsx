@@ -6,8 +6,14 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/*
+  Label Humanizada - Rewear
+  Texto legível (text-sm→base), espaçamento confortável, cor mais presente.
+  Acessibilidade sem ser clínica - desabilitados com opacidade suave.
+*/
+
 const labelVariants = cva(
-  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+  "text-sm font-medium leading-relaxed text-foreground/90 peer-disabled:cursor-not-allowed peer-disabled:opacity-60 transition-colors"
 )
 
 const Label = React.forwardRef<

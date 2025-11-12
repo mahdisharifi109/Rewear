@@ -2,66 +2,96 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Design System Humanizado — Rewear
+  Escolhas deliberadas para criar uma experiência visual natural e acolhedora.
+  Cada valor foi ajustado manualmente, evitando padrões rígidos e mecânicos.
+*/
+
 @layer base {
-  /* Regra para forçar o site a caber no ecrã e remover o scroll horizontal */
+  /* Base sólida: site ocupa todo o ecrã sem scroll horizontal indesejado */
   html, body {
     width: 100%;
     overflow-x: hidden;
   }
   
   :root {
-    --background: 252 100% 97.6%; /* Light off-white */
-    --foreground: 252 20% 10%;
+    /* Paleta natural com tons suaves, menos saturados que os típicos digitais */
+    /* Background: off-white quente, não puro #fff - mais confortável aos olhos */
+    --background: 42 15% 96.5%;
+    --foreground: 240 8% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 252 20% 10%;
+    /* Cards: branco ligeiramente creme, menos estéril que #ffffff */
+    --card: 40 10% 98%;
+    --card-foreground: 240 8% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 252 20% 10%;
+    --popover: 40 10% 98%;
+    --popover-foreground: 240 8% 15%;
 
-    --primary: 170 80% 40%; /* NOVO: Teal Escuro/Principal */
-    --primary-foreground: 0 0% 100%; /* Branco para alto contraste */
+    /* Primary: Verde-azulado natural, inspirado em folhagens e sustentabilidade */
+    /* Não é um teal vibrante típico - tem mais profundidade e calidez */
+    --primary: 165 48% 42%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 252 50% 92%;
-    --secondary-foreground: 252 20% 10%;
+    /* Secondary: Cinza ligeiramente lavanda - adiciona personalidade sutil */
+    --secondary: 240 12% 90%;
+    --secondary-foreground: 240 8% 20%;
 
-    --muted: 252 50% 92%;
-    --muted-foreground: 252 20% 40%;
+    /* Muted: Tom neutro mas não frio - tem um subtexto de bege */
+    --muted: 40 8% 88%;
+    --muted-foreground: 240 6% 45%;
 
-    --accent: 170 100% 90%; /* NOVO: Teal Suave/Destaque */
-    --accent-foreground: 170 80% 20%; /* Teal escuro para contraste */
+    /* Accent: Verde menta suave - destaca sem gritar */
+    --accent: 165 35% 88%;
+    --accent-foreground: 165 45% 25%;
 
-    --destructive: 0 84.2% 60.2%;
+    /* Destructive: Vermelho-terracota, menos agressivo que vermelho puro */
+    --destructive: 8 72% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 252 20% 90%;
-    --input: 252 20% 95%;
-    --ring: 170 70% 30%; /* Ring combina com Primary */
+    /* Borders e inputs: linhas subtis, quase imperceptíveis - elegância discreta */
+    --border: 240 10% 87%;
+    --input: 40 8% 92%;
     
-    --radius: 0.5rem;
+    /* Ring: Foco visível mas natural - não neon */
+    --ring: 165 48% 42%;
+    
+    /* Radius: ligeiramente maior que padrão - cantos mais suaves e acolhedores */
+    --radius: 0.625rem;
   }
 
   .dark {
-    /* Tema Escuro - adaptado ao novo Primary/Accent */
-    --background: 252 10% 10%;
-    --foreground: 0 0% 98%;
-    --card: 252 10% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 252 10% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 170 50% 50%; /* Teal mais claro para dark */
+    /* Modo escuro: tons profundos mas não pretos absolutos */
+    /* Evitamos #000 - preferimos cinzas muito escuros com leve matiz */
+    --background: 240 8% 12%;
+    --foreground: 40 10% 94%;
+    
+    --card: 240 8% 14%;
+    --card-foreground: 40 10% 94%;
+    
+    --popover: 240 8% 14%;
+    --popover-foreground: 40 10% 94%;
+    
+    /* Primary no dark: verde-azulado mais luminoso mas ainda natural */
+    --primary: 165 42% 52%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 252 10% 20%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 252 10% 20%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 170 50% 25%; /* Accent escuro */
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    
+    --secondary: 240 8% 18%;
+    --secondary-foreground: 40 10% 94%;
+    
+    --muted: 240 6% 20%;
+    --muted-foreground: 240 6% 60%;
+    
+    /* Accent no dark: verde com luminosidade média - destaque sem ofuscar */
+    --accent: 165 35% 28%;
+    --accent-foreground: 40 10% 94%;
+    
+    --destructive: 8 65% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 252 10% 20%;
-    --input: 252 10% 20%;
-    --ring: 170 50% 50%;
+    
+    --border: 240 8% 22%;
+    --input: 240 8% 18%;
+    --ring: 165 42% 52%;
   }
 }
 
@@ -69,7 +99,60 @@
   * {
     @apply border-border;
   }
+  
   body {
     @apply bg-background text-foreground;
+    /* Suavização de fontes para leitura mais confortável */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Kerning e ligaduras ativadas - tipografia profissional */
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+}
+
+/* 
+  Transições Orgânicas
+  Curvas de easing personalizadas - nada de ease-in-out linear!
+  Inspiradas em movimentos naturais, não em máquinas.
+*/
+@layer utilities {
+  .transition-organic {
+    transition: all 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .transition-smooth {
+    transition: all 280ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+  
+  .transition-gentle {
+    transition: all 420ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+}
+
+/* 
+  Sombras em Camadas
+  Não usamos uma única drop-shadow dura.
+  Múltiplas camadas criam profundidade realista, como luz natural.
+*/
+@layer utilities {
+  .shadow-soft {
+    box-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.06),
+      0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  
+  .shadow-elevated {
+    box-shadow: 
+      0 4px 8px rgba(0, 0, 0, 0.08),
+      0 2px 4px rgba(0, 0, 0, 0.06),
+      0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  
+  .shadow-floating {
+    box-shadow: 
+      0 12px 24px rgba(0, 0, 0, 0.10),
+      0 6px 12px rgba(0, 0, 0, 0.08),
+      0 2px 4px rgba(0, 0, 0, 0.06);
   }
 }

@@ -10,9 +10,11 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Usar variáveis geradas por next/font para evitar bloqueio de renderização
-        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
-        heading: ['var(--font-sans)', 'Inter', 'system-ui', 'sans-serif'],
+        // Escolha manual de fontes para dar personalidade ao projeto
+        // Open Sans: humanista, traz acolhimento ao corpo do texto
+        body: ['var(--font-body)', 'Open Sans', 'system-ui', 'sans-serif'],
+        // Lora: serif com curvas suaves, perfeita para títulos impactantes
+        heading: ['var(--font-heading)', 'Lora', 'Georgia', 'serif'],
       },
       colors: {
         border: 'hsl(var(--border))',

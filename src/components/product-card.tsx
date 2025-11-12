@@ -90,13 +90,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <Card
       onClick={handleCardClick}
       className={cn(
-        "flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full cursor-pointer group border-border/50",
+        "flex flex-col overflow-hidden transition-smooth hover:shadow-floating hover:-translate-y-1 h-full cursor-pointer group border-border/50",
         product.status === 'vendido' && "opacity-60 grayscale"
       )}
     >
       <div className="flex-grow">
         <CardHeader className="p-0">
-          <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/30">
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/30 rounded-t-[0.75rem]">
             <Image
               src={product.imageUrls[0]}
               alt={product.name}
@@ -104,7 +104,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               loading="lazy"
               fetchPriority="low"
               sizes="(max-width: 768px) 50vw, 33vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              className="object-cover transition-organic group-hover:scale-110"
             />
              {product.status === 'vendido' && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
@@ -115,7 +115,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </CardHeader>
         <CardContent className="p-5 space-y-3">
           <div className="flex items-start justify-between gap-3">
-            <CardTitle className="text-base md:text-lg font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2">
+            <CardTitle className="text-base md:text-lg font-semibold leading-snug group-hover:text-primary transition-gentle line-clamp-2">
               {product.name}
             </CardTitle>
             <div className="text-xl font-bold text-primary whitespace-nowrap">{product.price.toFixed(2)}€</div>
@@ -136,7 +136,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {isOwner ? (
           <div className="w-full flex flex-col gap-2.5">
             {product.status !== 'vendido' && (
-              <Button variant="outline" size="sm" className="w-full shadow-sm hover:shadow-md transition-shadow" onClick={handleMarkAsSold}>
+              <Button variant="outline" size="sm" className="w-full" onClick={handleMarkAsSold}>
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Marcar como Vendido
               </Button>
@@ -168,7 +168,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         ) : (
           <Button 
-            className="w-full shadow-sm hover:shadow-md transition-shadow font-medium" 
+            className="w-full font-medium" 
             onClick={handleAddToCart} 
             disabled={!user || product.status === 'vendido'}
           >

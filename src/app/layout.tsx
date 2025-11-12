@@ -6,20 +6,34 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/context/auth-context';
 import { ProductProvider } from '@/context/product-context';
 import { Suspense } from 'react';
-import { Inter } from 'next/font/google';
+import { Lora, Open_Sans } from 'next/font/google';
 import { ClientOnlyFooter } from '@/components/client-only-footer';
 
 export const metadata: Metadata = {
-  title: 'Rewear', // <-- ALTERADO
-  description: 'Compre e venda artigos em segunda mão.',
+  title: 'Rewear — Moda Sustentável em Segunda Mão',
+  description: 'Compre e venda roupa em segunda mão. Uma forma consciente de renovar o guarda-roupa e cuidar do planeta.',
 };
 
 function PageFallback() {
   return <div className="flex-1" />;
 }
 
-// Fonts (avaliadas em build, não em runtime)
-const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-sans' });
+// Combinação de fontes escolhida manualmente para transmitir calor e autenticidade
+// Lora: serif elegante para títulos, traz sofisticação sem frieza
+// Open Sans: humanista para texto corrido, legível e acolhedora
+const loraFont = Lora({ 
+  subsets: ['latin'], 
+  display: 'swap', 
+  variable: '--font-heading',
+  weight: ['400', '500', '600', '700']
+});
+
+const openSansFont = Open_Sans({ 
+  subsets: ['latin'], 
+  display: 'swap', 
+  variable: '--font-body',
+  weight: ['300', '400', '500', '600', '700']
+});
 
 
 export default function RootLayout({
@@ -28,10 +42,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt" className={`${inter.variable}`}>
+    <html lang="pt" className={`${loraFont.variable} ${openSansFont.variable}`}>
       <head></head>
-      {/* O body agora está limpo, sem classes de overflow */}
-      <body className="font-sans antialiased">
+      {/* Aplicando a fonte Open Sans no body para um visual mais humano e acolhedor */}
+      <body className="font-body antialiased">
         <AuthProvider>
           <Suspense fallback={<PageFallback />}>
             <ProductProvider>
