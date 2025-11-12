@@ -335,7 +335,11 @@ const ProfilePage: React.FC = () => {
     };
 
     if (loading || !user) {
-        return <div className="container py-8"><p>A carregar perfil...</p></div>;
+        return (
+            <div className="container py-8" role="status" aria-live="polite" aria-label="A carregar perfil">
+                <p>A carregar perfil...</p>
+            </div>
+        );
     }
 
     // Dados Mockup (Hardcoded)

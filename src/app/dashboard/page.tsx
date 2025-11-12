@@ -25,7 +25,7 @@ export default function DashboardPage() {
 
   if (loading || !user) {
     return (
-      <div className="container mx-auto flex min-h-[80vh] items-center justify-center">
+      <div className="container mx-auto flex min-h-[80vh] items-center justify-center" role="status" aria-live="polite" aria-label="A carregar dashboard">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );

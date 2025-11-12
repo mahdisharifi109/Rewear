@@ -34,7 +34,7 @@ export default function FavoritesPage() {
 
     if (authLoading || productsLoading || !user) {
         return (
-            <div className="container mx-auto px-4 py-16 text-center">
+            <div className="container mx-auto px-4 py-16 text-center" role="status" aria-live="polite" aria-label="A carregar favoritos">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
                 <p className="mt-2">A carregar os seus favoritos...</p>
             </div>

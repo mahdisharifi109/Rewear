@@ -46,13 +46,20 @@ export default function RootLayout({
       <head></head>
       {/* Aplicando a fonte Open Sans no body para um visual mais humano e acolhedor */}
       <body className="font-body antialiased">
+        {/* Skip link para acessibilidade: permite saltar diretamente para o conteúdo principal */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-background focus:text-foreground focus:px-4 focus:py-2 focus:rounded-md focus:shadow-elevated"
+        >
+          Ir para o conteúdo
+        </a>
         <AuthProvider>
           <Suspense fallback={<PageFallback />}>
             <ProductProvider>
               <CartProvider>
                 <div className="flex min-h-screen flex-col">
                   <Header />
-                  <main className="flex-1">
+                  <main id="main-content" className="flex-1">
                     <Suspense fallback={<PageFallback />}>
                       {children}
                     </Suspense>
