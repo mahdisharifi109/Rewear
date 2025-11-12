@@ -4,6 +4,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { useProducts } from '@/context/product-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, Package, Star } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -98,6 +99,7 @@ export function SellerDashboard() {
           Olá, {user?.name}! Aqui está um resumo da sua atividade.
         </p>
       </div>
+      <Separator />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
@@ -131,6 +133,7 @@ export function SellerDashboard() {
           </CardContent>
         </Card>
       </div>
+      <Separator />
 
       <Card>
         <CardHeader>
@@ -159,6 +162,7 @@ export function SellerDashboard() {
             )}
         </CardContent>
       </Card>
+      <Separator />
 
       {/* Últimas Avaliações */}
       <div className="mt-8">
