@@ -60,7 +60,7 @@ export default function WalletPage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center">
             <Button size="lg" className="w-full max-w-xs" onClick={handleWithdraw}>
-              <Banknote className="mr-2 h-5 w-5" />
+              <Banknote className="mr-2 h-4 w-4" />
               Levantar Saldo
             </Button>
             <p className="mt-4 text-xs text-muted-foreground text-center">
