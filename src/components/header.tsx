@@ -253,7 +253,7 @@ export function Header() {
 
               {/* Botão de Tema */}
               <Button variant="ghost" size="icon" onClick={toggleTheme}>
-                  {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                  {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                   <span className="sr-only">Alternar tema</span>
               </Button>
           </div>
@@ -264,10 +264,10 @@ export function Header() {
                   {/* Ícones de Ação Logados (Desktop) */}
                   <div className="hidden md:flex items-center gap-1.5"> 
                       <Button variant="ghost" size="icon" asChild>
-                          <Link href="/favorites"><Heart className="h-5 w-5" /><span className="sr-only">Favoritos</span></Link>
+                          <Link href="/favorites"><Heart className="h-4 w-4" /><span className="sr-only">Favoritos</span></Link>
                       </Button>
                       <Button variant="ghost" size="icon" asChild>
-                          <Link href="/inbox"><MessageSquare className="h-5 w-5" /><span className="sr-only">Mensagens</span></Link>
+                          <Link href="/inbox"><MessageSquare className="h-4 w-4" /><span className="sr-only">Mensagens</span></Link>
                       </Button>
                       <NotificationBell />
                   </div>
@@ -276,7 +276,7 @@ export function Header() {
                   <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
-                              <User className="h-5 w-5" />
+                              <User className="h-4 w-4" />
                           </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
@@ -306,8 +306,8 @@ export function Header() {
           )}
 
           {/* 3. Carrinho */}
-          <Button variant="ghost" size="icon" className={cn("relative", isCartAnimating && "animate-bounce")} onClick={() => setIsCartOpen(true)}>
-            <ShoppingCart className="h-5 w-5" />
+                    <Button variant="ghost" size="icon" className={cn("relative", isCartAnimating && "animate-bounce")} onClick={() => setIsCartOpen(true)}>
+                        <ShoppingCart className="h-4 w-4" />
             {isMounted && cartCount > 0 && (
               <Badge variant="default" className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-1 text-xs">{cartCount}</Badge>
             )}
@@ -365,7 +365,7 @@ export function Header() {
                     <div className="flex justify-between items-center px-2">
                         <span className="font-medium">Modo {theme === 'light' ? 'Escuro' : 'Claro'}</span>
                         <Button variant="ghost" size="icon" onClick={toggleTheme}>
-                            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                            {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                         </Button>
                     </div>
                     {isMounted && user && (

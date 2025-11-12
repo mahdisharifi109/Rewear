@@ -3,7 +3,6 @@
 import { cn } from '@/lib/utils';
 
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -188,4 +187,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   );
 };
 
-export default ProductCard;
+export default React.memo(ProductCard, (prev, next) => {
+  const a = prev.product;
+  const b = next.product;
+  // Evita re-render se nada relevante do produto mudou
+  return (
+    a.id === b.id &&
+    a.price === b.price &&
+    a.status === b.status &&
+    a.name === b.name &&
+    a.imageUrls[0] === b.imageUrls[0] &&
+    a.isVerified === b.isVerified
+  );
+});
