@@ -26,32 +26,35 @@ export default function AboutPage() {
   return (
     <>
         {/* Hero Section */}
-        <section className="bg-primary/10">
-            <div className="container mx-auto px-4 py-24 text-center sm:px-6 lg:px-8">
-                <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
-                    A mudar a forma como pensamos a moda.
+        <section className="relative bg-gradient-to-b from-primary/5 via-primary/10 to-background">
+            <div className="container mx-auto px-4 py-28 text-center sm:px-6 lg:px-8">
+                <div className="inline-flex items-center justify-center p-2 mb-6 rounded-full bg-primary/10">
+                  <Recycle className="h-8 w-8 text-primary" />
+                </div>
+                <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl font-heading">
+                    A mudar a forma como pensamos a moda
                 </h1>
-                <p className="mt-6 max-w-2xl mx-auto text-lg leading-8 text-muted-foreground">
-                    A Rewear nasceu de uma ideia simples: dar uma segunda oportunidade a cada artigo e criar um impacto positivo no mundo, uma venda de cada vez. {/* <-- ALTERADO */}
+                <p className="mt-8 max-w-3xl mx-auto text-lg md:text-xl leading-relaxed text-muted-foreground">
+                    A Rewear nasceu de uma ideia simples: dar uma segunda oportunidade a cada artigo e criar um impacto positivo no mundo, uma venda de cada vez.
                 </p>
             </div>
         </section>
 
         {/* Values Section */}
-        <section className="py-20">
+        <section className="py-24">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-12">
-                    <h2 className="text-3xl font-bold tracking-tight">Os Nossos Valores</h2>
-                    <p className="mt-4 text-lg text-muted-foreground">O que nos move todos os dias.</p>
+                <div className="text-center mb-16">
+                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight font-heading">Os Nossos Valores</h2>
+                    <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">O que nos move todos os dias.</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
                     {values.map((value) => (
-                        <div key={value.title} className="text-center">
-                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                        <div key={value.title} className="text-center group">
+                            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 transition-all duration-300 group-hover:bg-primary/20 group-hover:scale-110">
                                 {value.icon}
                             </div>
-                            <h3 className="mt-6 text-xl font-medium text-foreground">{value.title}</h3>
-                            <p className="mt-2 text-muted-foreground">{value.description}</p>
+                            <h3 className="mt-8 text-xl font-semibold text-foreground">{value.title}</h3>
+                            <p className="mt-3 text-base text-muted-foreground leading-relaxed">{value.description}</p>
                         </div>
                     ))}
                 </div>
@@ -59,12 +62,14 @@ export default function AboutPage() {
         </section>
 
         {/* Call to Action Section */}
-        <section className="bg-muted/40 py-20">
+        <section className="relative bg-gradient-to-b from-primary/5 to-muted/40 py-24">
             <div className="container mx-auto text-center px-4 sm:px-6 lg:px-8">
-                <h2 className="text-3xl font-bold tracking-tight">Junta-te ao Movimento</h2>
-                <p className="mt-4 text-lg text-muted-foreground">Faz parte de uma comunidade que está a fazer a diferença.</p>
-                <div className="mt-8 flex justify-center gap-4">
-                    <Button asChild size="lg">
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight font-heading">Junta-te ao Movimento</h2>
+                <p className="mt-5 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                  Faz parte de uma comunidade que está a fazer a diferença, um produto de cada vez.
+                </p>
+                <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+                    <Button asChild size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
                         <Link href="/sell">Começar a Vender</Link>
                     </Button>
                     <Button asChild size="lg" variant="outline">

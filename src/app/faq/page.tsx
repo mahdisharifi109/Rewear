@@ -40,26 +40,28 @@ const faqs = [
 
 export default function FAQPage() {
   return (
-    <div className="bg-muted/40">
-        <div className="container mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-                <HelpCircle className="mx-auto h-12 w-12 text-primary" />
-                <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
-                Centro de Ajuda
+    <div className="bg-gradient-to-b from-muted/30 to-background min-h-screen">
+        <div className="container mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+                <div className="inline-flex items-center justify-center p-3 mb-6 rounded-full bg-primary/10">
+                  <HelpCircle className="h-10 w-10 text-primary" />
+                </div>
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl font-heading">
+                  Centro de Ajuda
                 </h1>
-                <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                Encontre respostas para as perguntas mais comuns sobre a Rewear. {/* <-- ALTERADO */}
+                <p className="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground">
+                  Encontre respostas para as perguntas mais comuns sobre a Rewear.
                 </p>
             </div>
 
-            <div className="bg-background p-6 rounded-lg shadow-sm">
-                <Accordion type="single" collapsible className="w-full">
+            <div className="bg-card border border-border/50 p-8 rounded-2xl shadow-lg">
+                <Accordion type="single" collapsible className="w-full space-y-2">
                 {faqs.map((faq, index) => (
-                    <AccordionItem value={`item-${index}`} key={index}>
-                    <AccordionTrigger className="text-left text-lg font-semibold hover:no-underline">
+                    <AccordionItem value={`item-${index}`} key={index} className="border-b border-border/70 last:border-0">
+                    <AccordionTrigger className="text-left text-base md:text-lg font-semibold hover:no-underline hover:text-primary transition-colors py-5">
                         {faq.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-base text-muted-foreground">
+                    <AccordionContent className="text-base text-muted-foreground leading-relaxed pb-5">
                         {faq.answer}
                     </AccordionContent>
                     </AccordionItem>
@@ -67,12 +69,12 @@ export default function FAQPage() {
                 </Accordion>
             </div>
 
-            <div className="mt-12 text-center border-t pt-8">
-                <h3 className="text-xl font-semibold">Não encontrou a sua resposta?</h3>
-                <p className="mt-2 text-muted-foreground">A nossa equipa está pronta para ajudar.</p>
-                <Button asChild className="mt-4">
+            <div className="mt-16 text-center p-8 bg-muted/50 rounded-2xl border border-border/50">
+                <h3 className="text-xl md:text-2xl font-semibold">Não encontrou a sua resposta?</h3>
+                <p className="mt-3 text-muted-foreground text-base">A nossa equipa está pronta para ajudar.</p>
+                <Button asChild size="lg" className="mt-6 shadow-md hover:shadow-lg transition-shadow">
                     <Link href="/contact">
-                        <Mail className="mr-2 h-4 w-4" /> Contacte o Suporte
+                        <Mail className="mr-2 h-5 w-5" /> Contacte o Suporte
                     </Link>
                 </Button>
             </div>
