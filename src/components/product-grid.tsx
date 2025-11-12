@@ -77,12 +77,36 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
 
     let filtered = products;
     
-    // 2. Filtragem Local (Apenas por texto - 'q')
+    // 2. Filtragem Local Híbrida (texto, brands, conditions, sizes)
     const searchQuery = searchParams.get("q")?.toLowerCase() || "";
-    if (searchQuery) filtered = filtered.filter(p => p.name.toLowerCase().includes(searchQuery) || p.description.toLowerCase().includes(searchQuery));
+    const conditions = searchParams.get("conditions")?.split(',').filter(Boolean) || [];
+    const brands = searchParams.get("brands")?.split(',').filter(Boolean) || [];
+    const sizes = searchParams.get("sizes")?.split(',').filter(Boolean).map(s => s.trim().toUpperCase()) || [];
     
-    // O resto da filtragem (price, category, condition, brands, sizes) 
-    // AGORA É EXECUTADA NO SERVIDOR (product-context.tsx)!
+    // Filtro de texto
+    if (searchQuery) {
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchQuery) || 
+        p.description.toLowerCase().includes(searchQuery)
+      );
+    }
+    
+    // Filtro de condições (client-side para evitar múltiplos 'in' no Firestore)
+    if (conditions.length > 0) {
+      filtered = filtered.filter(p => conditions.includes(p.condition));
+    }
+    
+    // Filtro de marcas (client-side para evitar múltiplos 'in' no Firestore)
+    if (brands.length > 0) {
+      filtered = filtered.filter(p => p.brand && brands.includes(p.brand));
+    }
+    
+    // Filtro de tamanhos
+    if (sizes.length > 0) {
+      filtered = filtered.filter(p => 
+        p.sizes?.some(size => sizes.includes(size.toUpperCase()))
+      );
+    }
 
     return filtered;
   }, [searchParams, products, personalized, user]);

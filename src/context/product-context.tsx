@@ -38,24 +38,15 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     const minPrice = Number(searchParams.get("minPrice"));
     const maxPrice = searchParams.get("maxPrice") === 'Infinity' ? Infinity : Number(searchParams.get("maxPrice"));
     const categoryQuery = searchParams.get("category");
-    const conditions = searchParams.get("conditions")?.split(',').filter(Boolean) || [];
-    const brands = searchParams.get("brands")?.split(',').filter(Boolean) || [];
-    // Nota: O filtro de texto ('q') e o filtro de 'sizes' não podem ser otimizados no Firestore 
-    // sem indexação avançada ou busca secundária. Vamos usá-los no filter local, 
-    // mas priorizamos price/category/conditions no Firestore.
+    // Nota: Removido 'conditions' e 'brands' do Firestore para evitar erro de múltiplos 'in'.
+    // Estes filtros são aplicados no client-side (product-grid.tsx).
 
-    // 1. Filtrar por Preço
+    // 1. Filtrar por Preço (eficiente no Firestore)
     if (minPrice > 0) constraints.push(where("price", ">=", minPrice));
     if (maxPrice && maxPrice < Infinity) constraints.push(where("price", "<=", maxPrice));
 
-    // 2. Filtrar por Categoria
+    // 2. Filtrar por Categoria (eficiente no Firestore)
     if (categoryQuery) constraints.push(where("category", "==", categoryQuery));
-
-    // 3. Filtrar por Condições (Firestore permite 'in' para até 10 valores)
-    if (conditions.length > 0) constraints.push(where("condition", "in", conditions));
-    
-    // 4. Filtrar por Marcas (Firestore permite 'in' para até 10 valores)
-    if (brands.length > 0) constraints.push(where("brand", "in", brands));
     
     // Filtro de status para mostrar apenas produtos disponíveis (default)
     constraints.push(where("status", "==", 'disponível')); 
