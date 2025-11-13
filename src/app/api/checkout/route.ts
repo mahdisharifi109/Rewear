@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, writeBatch, doc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { collection, writeBatch, doc, serverTimestamp, getDoc, updateDoc, increment } from 'firebase/firestore';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, checkoutData, cartItems, isVerificationEnabled, subtotal, total } = body;
+    const { userId, checkoutData, cartItems, isVerificationEnabled, subtotal, total, useWallet } = body;
     if (!userId || !cartItems || !checkoutData) {
       return NextResponse.json({ error: 'Dados insuficientes.' }, { status: 400 });
     }
@@ -22,7 +22,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Stock insuficiente para: ${item.product.name}` }, { status: 400 });
       }
     }
-    // Simular criação de PaymentIntent Stripe
+    // Determinar total e aplicação de carteira (simulação)
+    let orderTotal: number = Number(total) || 0;
+    let walletApplied = 0;
+
+    if (useWallet) {
+      const buyerRef = doc(db, 'users', userId);
+      const buyerSnap = await getDoc(buyerRef);
+      if (buyerSnap.exists()) {
+        const buyer = buyerSnap.data() as any;
+        const available = (buyer.wallet?.available ?? buyer.walletBalance ?? 0) as number;
+        walletApplied = Math.min(available, orderTotal);
+        orderTotal = Math.max(0, orderTotal - walletApplied);
+      }
+    }
+
+    // Simular criação de PaymentIntent Stripe para o restante (se existir)
     const paymentSuccess = true; // Simulação
     if (!paymentSuccess) {
       return NextResponse.json({ error: 'Falha no pagamento.' }, { status: 402 });
@@ -31,6 +46,28 @@ export async function POST(req: NextRequest) {
     // Executar batch Firestore
     const batch = writeBatch(db);
     const timestamp = serverTimestamp();
+
+    // 0) Se usou carteira, registar transação do comprador e debitar saldo disponível
+    if (walletApplied > 0) {
+      const buyerRef = doc(db, 'users', userId);
+      // Debitar carteira disponível (campo novo wallet.available; cair para walletBalance se não existir)
+      // Ambos os campos são mantidos para retrocompatibilidade
+      batch.set(doc(collection(db, 'wallet_transactions')), {
+        userId,
+        type: 'compra',
+        amount: -walletApplied,
+        description: 'Compra usando saldo da carteira',
+        createdAt: timestamp,
+        status: 'confirmado',
+      });
+      // Atualização em profundidade
+      // Nota: Firestore aceita paths com ponto para nested fields
+      batch.update(buyerRef, {
+        'wallet.available': increment(-walletApplied),
+      });
+      // Se a app antiga usar walletBalance, manter em sincronia
+      batch.update(buyerRef, { walletBalance: increment(-walletApplied) });
+    }
     for (const item of cartItems) {
       const productRef = doc(db, 'products', item.product.id);
       // 1. Compra
@@ -76,9 +113,23 @@ export async function POST(req: NextRequest) {
           createdAt: timestamp,
         });
       }
+
+      // 5. Carteira do vendedor: creditar PENDENTE pelo valor do item (simulação sem taxas)
+      const sellerRef = doc(db, 'users', item.product.userId);
+      const lineTotal = Number(item.product.price) * Number(item.quantity);
+      batch.update(sellerRef, { 'wallet.pending': increment(lineTotal) });
+      batch.set(doc(collection(db, 'wallet_transactions')), {
+        userId: item.product.userId,
+        type: 'venda',
+        amount: lineTotal,
+        description: `Venda pendente: ${item.product.name}`,
+        createdAt: timestamp,
+        status: 'pendente',
+        relatedProductId: item.product.id,
+      });
     }
     await batch.commit();
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, walletApplied, charged: orderTotal });
   } catch (error) {
     return NextResponse.json({ error: 'Erro no checkout.' }, { status: 500 });
   }
