@@ -29,6 +29,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isVerificationEnabled, setIsVerificationEnabled] = useState(false); 
 
+  // Optimistic UI: adiciona ao carrinho imediatamente sem esperar resposta do servidor
   const addToCart = useCallback(({ product, quantity, size }: AddToCartPayload) => {
     setCartItems(prevItems => {
       const cartItemId = `${product.id}-${size || ''}`;
@@ -43,12 +44,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prevItems, { id: cartItemId, product, quantity, size }];
     });
+    
+    // Feedback visual imediato para o utilizador
+    if (typeof window !== 'undefined') {
+      // Animação ou notificação pode ser adicionada aqui
+      const event = new CustomEvent('cart:item-added', { 
+        detail: { product, quantity, size } 
+      });
+      window.dispatchEvent(event);
+    }
   }, []);
 
   const removeFromCart = useCallback((cartItemId: string) => {
     setCartItems(prevItems => prevItems.filter(item => item.id !== cartItemId));
   }, []);
 
+  // Optimistic UI: atualiza quantidade imediatamente
   const updateItemQuantity = useCallback((cartItemId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeFromCart(cartItemId);

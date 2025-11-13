@@ -4,6 +4,7 @@
 
 import { ProductGrid } from "@/components/product-grid";
 import { FiltersSidebar } from "@/components/filters-sidebar";
+import { FilterChips } from "@/components/filter-chips";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -81,6 +82,7 @@ export default function CatalogPage() {
                     </aside>
                     <main className="md:col-span-3">
                         <SortBar />
+                        <FilterChips />
                         <Suspense fallback={<ProductGridFallback/>}>
                             <ProductGrid />
                         </Suspense>

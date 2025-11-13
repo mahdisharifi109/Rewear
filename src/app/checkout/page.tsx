@@ -158,7 +158,26 @@ export default function CheckoutPage() {
     return (
         <div className="bg-muted/40">
             <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-                <div className="text-center mb-10"><h1 className="text-4xl font-bold tracking-tight">Finalizar Compra</h1></div>
+                <div className="text-center mb-10">
+                    <h1 className="text-4xl font-bold tracking-tight">Finalizar Compra</h1>
+                    {/* Progress Indicator */}
+                    <div className="mt-6 flex items-center justify-center gap-2">
+                        <div className="flex items-center">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold text-sm">1</div>
+                            <span className="ml-2 text-sm font-medium">Entrega</span>
+                        </div>
+                        <div className="h-px w-12 bg-border"></div>
+                        <div className="flex items-center">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold text-sm">2</div>
+                            <span className="ml-2 text-sm font-medium">Pagamento</span>
+                        </div>
+                        <div className="h-px w-12 bg-border"></div>
+                        <div className="flex items-center">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-muted text-muted-foreground font-semibold text-sm">3</div>
+                            <span className="ml-2 text-sm text-muted-foreground">Confirmação</span>
+                        </div>
+                    </div>
+                </div>
                 <form onSubmit={handleSubmit(onFinalSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
                     <div className="lg:col-span-2 space-y-8">
                         <Card>

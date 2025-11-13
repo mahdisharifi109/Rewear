@@ -1,6 +1,11 @@
 import type {NextConfig} from 'next';
 import path from 'path';
 
+// Configuração do bundle analyzer
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   // Silence workspace root warning by declaring the monorepo root
   outputFileTracingRoot: path.join(process.cwd(), '..'),
@@ -69,4 +74,4 @@ const nextConfig: NextConfig = {
   ],
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

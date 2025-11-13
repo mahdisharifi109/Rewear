@@ -122,10 +122,19 @@ function NotificationBell() {
     return (
         <DropdownMenu onOpenChange={(open) => { if(open) handleMarkAllAsRead() }}>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="relative"
+                    aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
+                >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                        <Badge variant="destructive" className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-1 text-xs">
+                        <Badge 
+                            variant="destructive" 
+                            className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full p-1 text-xs"
+                            aria-hidden="true"
+                        >
                             {unreadCount}
                         </Badge>
                     )}
@@ -252,7 +261,12 @@ export function Header() {
               </Suspense>
 
               {/* Botão de Tema */}
-              <Button variant="ghost" size="icon" onClick={toggleTheme}>
+              <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={toggleTheme}
+                  aria-label={`Alternar para modo ${theme === 'light' ? 'escuro' : 'claro'}`}
+              >
                   {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                   <span className="sr-only">Alternar tema</span>
               </Button>
@@ -264,10 +278,16 @@ export function Header() {
                   {/* Ícones de Ação Logados (Desktop) */}
                   <div className="hidden md:flex items-center gap-1.5"> 
                       <Button variant="ghost" size="icon" asChild>
-                          <Link href="/favorites"><Heart className="h-4 w-4" /><span className="sr-only">Favoritos</span></Link>
+                          <Link href="/favorites" aria-label="Ver favoritos">
+                              <Heart className="h-4 w-4" />
+                              <span className="sr-only">Favoritos</span>
+                          </Link>
                       </Button>
                       <Button variant="ghost" size="icon" asChild>
-                          <Link href="/inbox"><MessageSquare className="h-4 w-4" /><span className="sr-only">Mensagens</span></Link>
+                          <Link href="/inbox" aria-label="Ver mensagens">
+                              <MessageSquare className="h-4 w-4" />
+                              <span className="sr-only">Mensagens</span>
+                          </Link>
                       </Button>
                       <NotificationBell />
                   </div>

@@ -1,8 +1,14 @@
 // src/app/about/page.tsx
-
+// Página estática renderizada no servidor para melhor performance
 import { Button } from "@/components/ui/button";
 import { Package2, Recycle, Users, Target, Handshake, Sparkles } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Sobre Nós — Rewear',
+  description: 'Conheça a Rewear: tornamos a moda em segunda mão a primeira escolha, criando um futuro de consumo consciente.',
+};
 
 const values = [
     {

@@ -1,9 +1,10 @@
 // Ficheiro: src/lib/firebase.ts
+// Imports modulares otimizados para reduzir bundle size
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage'; // Adicionado o import do Storage
+import { getStorage } from 'firebase/storage';
 
 // As tuas credenciais do Firebase a partir de variáveis de ambiente
 const firebaseConfig = {

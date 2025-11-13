@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, writeBatch, doc, serverTimestamp, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { validateAuth, checkRateLimit } from '@/lib/api-middleware';
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(ip, 5, 60000)) { // 5 requisições por minuto
+      return NextResponse.json({ 
+        error: 'Muitas requisições. Por favor, aguarde um momento.' 
+      }, { status: 429 });
+    }
+
     const body = await req.json();
     const { userId, checkoutData, cartItems, isVerificationEnabled, subtotal, total, useWallet } = body;
+    
     if (!userId || !cartItems || !checkoutData) {
       return NextResponse.json({ error: 'Dados insuficientes.' }, { status: 400 });
+    }
+
+    // Validação de autenticação
+    const authResult = await validateAuth(req, userId);
+    if (!authResult.valid) {
+      return authResult.error!;
     }
 
     // Simular validação de stock e pagamento

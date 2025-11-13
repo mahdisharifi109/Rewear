@@ -16,6 +16,9 @@
   }
   
   :root {
+    /* Fontes Google Fonts via CDN */
+    --font-heading: 'Lora', serif;
+    --font-body: 'Open Sans', sans-serif;
     /* Paleta natural com tons suaves, menos saturados que os típicos digitais */
     /* Background: off-white quente, não puro #fff - mais confortável aos olhos */
     --background: 42 15% 96.5%;

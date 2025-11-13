@@ -1,5 +1,4 @@
-"use client";
-
+// Página estática de FAQ - renderizada no servidor
 import {
   Accordion,
   AccordionContent,
@@ -8,7 +7,13 @@ import {
 } from "@/components/ui/accordion";
 import { Mail, HelpCircle } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button"; // IMPORTAÇÃO ADICIONADA
+import { Button } from "@/components/ui/button";
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'FAQ — Centro de Ajuda | Rewear',
+  description: 'Perguntas frequentes sobre como comprar e vender na Rewear. Encontre respostas sobre pagamentos, envios e segurança.',
+};
 
 // Lista de perguntas e respostas mais completa
 const faqs = [

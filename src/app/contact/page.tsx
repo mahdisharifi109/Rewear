@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import type { Metadata } from 'next';
+
+// Metadata não pode ser exportada de client components, será herdada do layout
 
 export default function ContactPage() {
   const { toast } = useToast();

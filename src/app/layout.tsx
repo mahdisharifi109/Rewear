@@ -6,34 +6,21 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/context/auth-context';
 import { ProductProvider } from '@/context/product-context';
 import { Suspense } from 'react';
-import { Lora, Open_Sans } from 'next/font/google';
 import { ClientOnlyFooter } from '@/components/client-only-footer';
+import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 export const metadata: Metadata = {
   title: 'Rewear — Moda Sustentável em Segunda Mão',
   description: 'Compre e venda roupa em segunda mão. Uma forma consciente de renovar o guarda-roupa e cuidar do planeta.',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
+  themeColor: '#ffffff',
+  manifest: '/manifest.json',
 };
 
 function PageFallback() {
   return <div className="flex-1" />;
 }
-
-// Combinação de fontes escolhida manualmente para transmitir calor e autenticidade
-// Lora: serif elegante para títulos, traz sofisticação sem frieza
-// Open Sans: humanista para texto corrido, legível e acolhedora
-const loraFont = Lora({ 
-  subsets: ['latin'], 
-  display: 'swap', 
-  variable: '--font-heading',
-  weight: ['400', '500', '600', '700']
-});
-
-const openSansFont = Open_Sans({ 
-  subsets: ['latin'], 
-  display: 'swap', 
-  variable: '--font-body',
-  weight: ['300', '400', '500', '600', '700']
-});
 
 
 export default function RootLayout({
@@ -42,8 +29,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt" className={`${loraFont.variable} ${openSansFont.variable}`}>
-      <head></head>
+    <html lang="pt">
+      <head>
+        {/* Google Fonts carregadas via CDN para evitar timeout no build */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap" 
+          rel="stylesheet"
+        />
+      </head>
       {/* Aplicando a fonte Open Sans no body para um visual mais humano e acolhedor */}
       <body className="font-body antialiased">
         {/* Skip link para acessibilidade: permite saltar diretamente para o conteúdo principal */}
@@ -53,19 +48,22 @@ export default function RootLayout({
         >
           Ir para o conteúdo
         </a>
+        <ServiceWorkerRegistration />
         <AuthProvider>
           <Suspense fallback={<PageFallback />}>
             <ProductProvider>
               <CartProvider>
-                <div className="flex min-h-screen flex-col">
-                  <ClientOnlyHeader />
-                  <main id="main-content" className="flex-1">
-                    <Suspense fallback={<PageFallback />}>
-                      {children}
-                    </Suspense>
-                  </main>
-                  <ClientOnlyFooter />
-                </div>
+                <ErrorBoundary>
+                  <div className="flex min-h-screen flex-col">
+                    <ClientOnlyHeader />
+                    <main id="main-content" className="flex-1">
+                      <Suspense fallback={<PageFallback />}>
+                        {children}
+                      </Suspense>
+                    </main>
+                    <ClientOnlyFooter />
+                  </div>
+                </ErrorBoundary>
                 <Toaster />
               </CartProvider>
             </ProductProvider>
