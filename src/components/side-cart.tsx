@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { memo } from "react";
 // Importar Recycle para usar como logo no carrinho vazio
 import { Minus, Plus, Trash2, Recycle } from "lucide-react"; 
 
@@ -14,7 +15,7 @@ interface SideCartProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function SideCart({ open, onOpenChange }: SideCartProps) {
+function SideCartComponent({ open, onOpenChange }: SideCartProps) {
   const { cartItems, removeFromCart, updateItemQuantity, subtotal, cartCount } = useCart();
 
   return (
@@ -90,3 +91,8 @@ export function SideCart({ open, onOpenChange }: SideCartProps) {
     </Sheet>
   );
 }
+
+// Memoizar para evitar re-renders quando open/cartItems não mudam
+export const SideCart = memo(SideCartComponent, (prev, next) => 
+  prev.open === next.open && prev.onOpenChange === next.onOpenChange
+);

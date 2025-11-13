@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import type { Product } from '@/lib/types';
 
 export default function FavoritesPage() {
     const { user, loading: authLoading } = useAuth();
@@ -27,9 +28,9 @@ export default function FavoritesPage() {
         }
     }, [user, authLoading, router, toast]);
 
-    const favoriteProducts = useMemo(() => {
+    const favoriteProducts = useMemo<Product[]>(() => {
         if (!user || !user.favorites) return [];
-        return products.filter(p => user.favorites.includes(p.id));
+        return products.filter((p: Product) => user.favorites.includes(p.id));
     }, [products, user]);
 
     if (authLoading || productsLoading || !user) {
@@ -51,7 +52,7 @@ export default function FavoritesPage() {
 
             {favoriteProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {favoriteProducts.map(product => (
+                    {favoriteProducts.map((product: Product) => (
                                                 <div
                           key={product.id}
                                                     className="shadow-soft rounded-xl bg-background p-2 transition-smooth hover:shadow-elevated hover:-translate-y-1 focus-within:ring-2 focus-within:ring-primary/40 motion-reduce:transition-none motion-reduce:transform-none"

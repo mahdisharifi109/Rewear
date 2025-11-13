@@ -7,9 +7,11 @@
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
+    "build:analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lighthouse": "lighthouse http://localhost:3000 --view --output html --output-path ./lighthouse-report.html"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",

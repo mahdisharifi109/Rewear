@@ -3,7 +3,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ClientOnlyHowItWorks } from "@/components/client-only-how-it-works";
+import dynamic from "next/dynamic";
+
+// Lazy load do vídeo promocional (client component)
+const PromotionalVideo = dynamic(() => import("@/components/promotional-video"), {
+  loading: () => <Skeleton className="h-[400px] w-full rounded-xl" />,
+});
+
+// Lazy load de HowItWorks
+const ClientOnlyHowItWorks = dynamic(() => import("@/components/client-only-how-it-works").then(m => ({ default: m.ClientOnlyHowItWorks })), {
+  loading: () => <Skeleton className="h-[300px] w-full" />,
+});
 
 function ProductGridFallback() {
   return (
@@ -55,28 +65,14 @@ export default function Home() {
         </Suspense>
       </div>
       
-      {/* Promotional Video Section */}
+      {/* Promotional Video Section - Lazy Loaded */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 font-heading">Veja como é fácil!</h2>
           <p className="text-muted-foreground mb-10 max-w-2xl mx-auto">
             Em poucos passos, publique o seu anúncio e conecte-se com compradores interessados.
           </p>
-          <div className="relative max-w-4xl mx-auto">
-            <video
-              className="rounded-xl shadow-2xl border border-border/50"
-              src="https://storage.googleapis.com/gemini-generative-ai-public-supported-storage/assets/promotional_video_secondwave.mp4"
-              width="100%"
-              height="auto"
-              controls
-              loop
-              autoPlay
-              muted
-              playsInline
-            >
-              Seu navegador não suporta a tag de vídeo.
-            </video>
-          </div>
+          <PromotionalVideo />
         </div>
       </section>
 

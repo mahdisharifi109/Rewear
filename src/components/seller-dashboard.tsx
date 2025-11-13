@@ -5,12 +5,18 @@ import { useAuth } from '@/context/auth-context';
 import { useProducts } from '@/context/product-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import dynamic from 'next/dynamic';
 import { DollarSign, Package, Star } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Review } from '@/lib/types';
+import type { Product, Review } from '@/lib/types';
 import { StarRating } from '@/components/ui/star-rating';
+
+// Code-split Recharts - import all at once to avoid type issues
+const RechartsChart = dynamic(() => import('@/components/recharts-chart'), { 
+  ssr: false,
+  loading: () => <div className="h-[300px] animate-pulse bg-muted rounded-lg" />
+});
 
 export function SellerDashboard() {
   const { user } = useAuth();
@@ -37,24 +43,24 @@ export function SellerDashboard() {
     fetchReviews();
   }, [user]);
 
-  const userProducts = useMemo(() => {
+  const userProducts = useMemo<Product[]>(() => {
     if (!user) return [];
-    return products.filter(p => p.userId === user.uid);
+    return products.filter((p: Product) => p.userId === user.uid);
   }, [products, user]);
 
   const totalRevenue = useMemo(() => {
     return userProducts
-      .filter(product => product.status === 'vendido')
-      .reduce((acc, product) => acc + product.price, 0);
+      .filter((product: Product) => product.status === 'vendido')
+      .reduce((acc: number, product: Product) => acc + product.price, 0);
   }, [userProducts]);
   
-  const activeListings = useMemo(() => {
-      return userProducts.filter(p => p.status !== 'vendido').length;
+    const activeListings = useMemo(() => {
+      return userProducts.filter((p: Product) => p.status !== 'vendido').length;
   }, [userProducts]);
 
   const averageRating = useMemo(() => {
       if (reviews.length === 0) return 0;
-      const total = reviews.reduce((acc, review) => acc + review.rating, 0);
+        const total = reviews.reduce((acc: number, review: Review) => acc + review.rating, 0);
       return total / reviews.length;
   }, [reviews]);
 
@@ -70,8 +76,8 @@ export function SellerDashboard() {
     });
 
     userProducts
-      .filter(p => p.status === 'vendido' && p.createdAt)
-      .forEach(product => {
+      .filter((p: Product) => p.status === 'vendido' && p.createdAt)
+      .forEach((product: Product) => {
         const saleDate = product.createdAt!.toDate();
         const month = monthNames[saleDate.getMonth()];
         const year = saleDate.getFullYear();
@@ -140,26 +146,7 @@ export function SellerDashboard() {
           <CardTitle>Visão Geral das Vendas</CardTitle>
         </CardHeader>
         <CardContent>
-            {monthlySalesData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={monthlySalesData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip 
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--background))",
-                            borderColor: "hsl(var(--border))"
-                          }}
-                        />
-                        <Bar dataKey="revenue" fill="hsl(var(--primary))" name="Rendimento" unit="€" />
-                    </BarChart>
-                </ResponsiveContainer>
-            ) : (
-                <div className="flex h-[300px] w-full items-center justify-center">
-                    <p className="text-muted-foreground">Ainda não há dados de vendas para mostrar.</p>
-                </div>
-            )}
+          <RechartsChart data={monthlySalesData} />
         </CardContent>
       </Card>
       <Separator />

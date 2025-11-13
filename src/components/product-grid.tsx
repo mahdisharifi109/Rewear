@@ -38,14 +38,27 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const observer = useRef<IntersectionObserver>();
 
+  const loadMoreTimeoutRef = useRef<NodeJS.Timeout>();
+  
   const handleLoadMore = useCallback(async () => {
     if (isLoadingMore || !hasMoreProducts) return;
-    setIsLoadingMore(true);
-    await loadMoreProducts();
-    setIsLoadingMore(false);
+    
+    // Debounce para evitar múltiplas chamadas rápidas
+    if (loadMoreTimeoutRef.current) {
+      clearTimeout(loadMoreTimeoutRef.current);
+    }
+    
+    loadMoreTimeoutRef.current = setTimeout(async () => {
+      setIsLoadingMore(true);
+      try {
+        await loadMoreProducts();
+      } finally {
+        setIsLoadingMore(false);
+      }
+    }, 150);
   }, [isLoadingMore, hasMoreProducts, loadMoreProducts]);
 
-  // Observer para o scroll infinito
+  // Observer para o scroll infinito com threshold otimizado
   const lastProductElementRef = useCallback((node: HTMLDivElement) => { 
     if (isLoadingMore) return;
     if (observer.current) observer.current.disconnect();
@@ -53,9 +66,21 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
       if (entries[0].isIntersecting && hasMoreProducts) {
         handleLoadMore();
       }
-    }, { rootMargin: '400px' }); 
+    }, { 
+      rootMargin: '600px',
+      threshold: 0.1
+    }); 
     if (node) observer.current.observe(node);
   }, [isLoadingMore, hasMoreProducts, handleLoadMore]);
+  
+  // Cleanup do timeout ao desmontar
+  useEffect(() => {
+    return () => {
+      if (loadMoreTimeoutRef.current) {
+        clearTimeout(loadMoreTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Lógica de Filtragem LOCAL (Reduzida)
   const filteredProducts = useMemo(() => {
@@ -111,9 +136,10 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
     return filtered;
   }, [searchParams, products, personalized, user]);
   
-  // A verificação de filtros ativos é mantida para a UI
-  const hasActiveFilters = searchParams.toString().length > 0;
-  const showLoadMore = !personalized && hasMoreProducts; // Load more é possível se houver mais produtos
+  // Memoizar verificações de filtros
+  const hasActiveFilters = useMemo(() => searchParams.toString().length > 0, [searchParams]);
+  const showLoadMore = useMemo(() => !personalized && hasMoreProducts, [personalized, hasMoreProducts]);
+  const productCount = useMemo(() => filteredProducts.length, [filteredProducts.length]);
 
   return (
     <section id="products">
@@ -121,7 +147,7 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
         <h2 className="text-3xl font-bold tracking-tight">
           {personalized ? "Recomendado para Si" : (hasActiveFilters ? "Resultados da Pesquisa" : "Descubra os Nossos Produtos")}
         </h2>
-        <p className="text-muted-foreground mt-2">{filteredProducts.length} resultado(s) encontrado(s)</p>
+        <p className="text-muted-foreground mt-2">{productCount} resultado(s) encontrado(s)</p>
       </div>
 
       {initialLoading ? (
