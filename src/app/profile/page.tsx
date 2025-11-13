@@ -406,17 +406,17 @@ const ProfilePage: React.FC = () => {
                         <div className="w-full space-y-1">
                             <h3 className="text-lg font-semibold mb-2">Detalhes Adicionais</h3>
                             <ProfileInfoItem 
-                                icon={<MapPin className="h-5 w-5 text-primary" />} 
+                                icon={<MapPin className="h-4 w-4 text-primary" />} 
                                 label="Localização" 
                                 value={user.location} 
                             />
                             <ProfileInfoItem 
-                                icon={<Phone className="h-5 w-5 text-primary" />} 
+                                icon={<Phone className="h-4 w-4 text-primary" />} 
                                 label="Telefone" 
                                 value={user.phone} 
                             />
                             <ProfileInfoItem 
-                                icon={<Calendar className="h-5 w-5 text-primary" />} 
+                                icon={<Calendar className="h-4 w-4 text-primary" />} 
                                 label="Membro Desde" 
                                 value={user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString('pt-PT', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
                             />

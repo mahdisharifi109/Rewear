@@ -96,7 +96,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         }
       }}
       className={cn(
-        "flex flex-col overflow-hidden transition-smooth hover:shadow-floating hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 h-full cursor-pointer group border-border/50",
+        "flex flex-col overflow-hidden transition-smooth hover:shadow-floating hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 motion-reduce:transition-none motion-reduce:transform-none h-full cursor-pointer group border-border/50",
         product.status === 'vendido' && "opacity-60 grayscale"
       )}
     >
