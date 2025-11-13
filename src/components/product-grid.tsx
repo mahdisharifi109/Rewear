@@ -107,6 +107,14 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
     const conditions = searchParams.get("conditions")?.split(',').filter(Boolean) || [];
     const brands = searchParams.get("brands")?.split(',').filter(Boolean) || [];
     const sizes = searchParams.get("sizes")?.split(',').filter(Boolean).map(s => s.trim().toUpperCase()) || [];
+    const colors = searchParams.get("colors")?.split(',').filter(Boolean) || [];
+    const locations = searchParams.get("locations")?.split(',').filter(Boolean) || [];
+    const categories = searchParams.get("categories")?.split(',').filter(Boolean) || [];
+    const minPriceStr = searchParams.get("minPrice");
+    const maxPriceStr = searchParams.get("maxPrice");
+    const minPrice = minPriceStr ? Number(minPriceStr) : undefined;
+    const maxPrice = maxPriceStr ? (maxPriceStr === 'Infinity' ? Infinity : Number(maxPriceStr)) : undefined;
+    const sort = searchParams.get("sort") || '';
     
     // Filtro de texto
     if (searchQuery) {
@@ -131,6 +139,44 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
       filtered = filtered.filter(p => 
         p.sizes?.some(size => sizes.includes(size.toUpperCase()))
       );
+    }
+
+    // Filtro de categorias
+    if (categories.length > 0) {
+      filtered = filtered.filter(p => categories.includes(p.category));
+    }
+
+    // Filtro de cores (se disponível no produto)
+    if (colors.length > 0) {
+      filtered = filtered.filter(p => p.color && colors.includes(p.color));
+    }
+
+    // Filtro de localização (se disponível no produto)
+    if (locations.length > 0) {
+      filtered = filtered.filter(p => p.location && locations.includes(p.location));
+    }
+
+    // Filtro de preço
+    if (typeof minPrice === 'number') {
+      filtered = filtered.filter(p => p.price >= minPrice);
+    }
+    if (typeof maxPrice === 'number') {
+      filtered = filtered.filter(p => p.price <= maxPrice);
+    }
+
+    // Ordenação
+    if (sort) {
+      if (sort === 'price_asc') {
+        filtered = [...filtered].sort((a, b) => a.price - b.price);
+      } else if (sort === 'price_desc') {
+        filtered = [...filtered].sort((a, b) => b.price - a.price);
+      } else if (sort === 'newest') {
+        filtered = [...filtered].sort((a, b) => {
+          const at = a.createdAt?.toMillis?.() ?? 0;
+          const bt = b.createdAt?.toMillis?.() ?? 0;
+          return bt - at;
+        });
+      }
     }
 
     return filtered;

@@ -29,6 +29,8 @@ export type Product = {
   sizes?: string[];
   brand?: string;
   material?: string;
+  color?: string;
+  location?: string; // Localização do artigo (cidade/região)
   status?: 'disponível' | 'vendido';
   isVerified?: boolean;
 };
@@ -85,11 +87,17 @@ export interface AppUser {
   favorites: string[];
   preferredBrands?: string[];
   preferredSizes?: string[];
-  walletBalance?: number;
+  // Saldos da carteira
+  walletBalance?: number; // legacy: manter para retrocompatibilidade
+  wallet?: {
+    available: number; // saldo disponível
+    pending: number;   // saldo pendente (aguarda confirmação do comprador)
+  };
   bio?: string;
   location?: string;
   phone?: string;
   photoURL?: string;
+  iban?: string; // IBAN para levantamentos
   createdAt?: Timestamp; // Adicionado para a data de registo
 }
 
@@ -112,4 +120,16 @@ export type Purchase = {
     sellerName: string;
     buyerId: string;
     date: Timestamp;
+};
+
+// Transações da carteira
+export type WalletTransaction = {
+  id: string;
+  type: 'venda' | 'compra' | 'levantamento' | 'ajuste' | 'taxa' | 'bonus';
+  amount: number; // positivo crédito, negativo débito
+  description: string;
+  createdAt: Timestamp;
+  status?: 'pendente' | 'confirmado' | 'cancelado';
+  relatedProductId?: string;
+  userId?: string;
 };

@@ -4,6 +4,7 @@ import { ProductGrid } from "@/components/product-grid";
 import { FiltersSidebar } from "@/components/filters-sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
+import { SortBar } from "@/components/sort-bar";
 
 function ProductGridFallback() {
   return (
@@ -37,6 +38,7 @@ function SearchPageContent() {
         </Suspense>
       </aside>
       <main className="md:col-span-3">
+        <SortBar />
         <Suspense fallback={<ProductGridFallback/>}>
           <ProductGrid />
         </Suspense>

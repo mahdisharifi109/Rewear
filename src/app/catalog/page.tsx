@@ -11,6 +11,7 @@ import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Settings } from "lucide-react";
+import { SortBar } from "@/components/sort-bar";
 
 function ProductGridFallback() {
   return (
@@ -79,6 +80,7 @@ export default function CatalogPage() {
                         </Suspense>
                     </aside>
                     <main className="md:col-span-3">
+                        <SortBar />
                         <Suspense fallback={<ProductGridFallback/>}>
                             <ProductGrid />
                         </Suspense>

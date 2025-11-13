@@ -42,10 +42,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         preferredBrands: userData.preferredBrands || [],
         preferredSizes: userData.preferredSizes || [],
         walletBalance: userData.walletBalance || 0,
+        wallet: userData.wallet ? { available: userData.wallet.available ?? 0, pending: userData.wallet.pending ?? 0 } : undefined,
         bio: userData.bio,
         location: userData.location,
         phone: userData.phone,
         photoURL: userData.photoURL,
+        iban: userData.iban,
         createdAt: userData.createdAt,
       } as AppUser);
     } else {

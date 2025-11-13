@@ -20,9 +20,10 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/context/auth-context";
 
 // Componente para o Resumo da Encomenda (à direita)
-const OrderSummary = () => {
+const OrderSummary = ({ overrideTotal, walletApplied }: { overrideTotal?: number; walletApplied?: number }) => {
     const { cartItems, subtotal, verificationFee, total, isVerificationEnabled, toggleVerification } = useCart();
     const shippingCost = 0;
+    const displayTotal = typeof overrideTotal === 'number' ? overrideTotal : total;
 
     return (
         <div className="sticky top-24">
@@ -61,8 +62,14 @@ const OrderSummary = () => {
                     <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>{subtotal.toFixed(2)}€</span></div>
                     <div className="flex justify-between text-sm"><span className="text-muted-foreground">Envio</span><span>{shippingCost > 0 ? `${shippingCost.toFixed(2)}€` : 'Grátis'}</span></div>
                     {isVerificationEnabled && <div className="flex justify-between text-sm"><span className="text-muted-foreground">Taxa de Verificação</span><span>{verificationFee.toFixed(2)}€</span></div>}
+                                        {walletApplied && walletApplied > 0 && (
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-muted-foreground">Saldo da Carteira</span>
+                                                <span className="text-green-600 font-medium">- {walletApplied.toFixed(2)}€</span>
+                                            </div>
+                                        )}
                     <Separator/>
-                    <div className="flex justify-between font-semibold text-base"><span>Total</span><span>{total.toFixed(2)}€</span></div>
+                                        <div className="flex justify-between font-semibold text-base"><span>Total</span><span>{displayTotal.toFixed(2)}€</span></div>
                 </CardContent>
             </Card>
         </div>
@@ -86,6 +93,10 @@ export default function CheckoutPage() {
     const { toast } = useToast();
     const { user } = useAuth(); // OBTER USER PARA A TRANSAÇÃO
     const { clearCart, total, isVerificationEnabled, createSecureCheckoutPayload } = useCart();
+    const walletAvailable = (user?.wallet?.available ?? user?.walletBalance ?? 0);
+    const [useWallet, setUseWallet] = useState<boolean>(walletAvailable > 0);
+    const effectiveWalletApplied = Math.min(walletAvailable, total);
+    const effectiveTotal = useWallet ? Math.max(0, total - effectiveWalletApplied) : total;
     const [isProcessing, setIsProcessing] = useState(false);
 
     const { control, handleSubmit, formState: { errors } } = useForm<CheckoutFormValues>({
@@ -116,6 +127,7 @@ export default function CheckoutPage() {
             const payload = {
                 userId: user.uid,
                 checkoutData: data,
+                useWallet,
                 ...cartPayload,
             };
             const res = await fetch('/api/checkout', {
@@ -165,6 +177,15 @@ export default function CheckoutPage() {
                         <Card>
                             <CardHeader><CardTitle>2. Pagamento</CardTitle></CardHeader>
                             <CardContent>
+                                                                {walletAvailable > 0 && (
+                                                                    <div className="flex items-center justify-between rounded-lg border p-3 mb-4">
+                                                                        <div>
+                                                                            <Label className="font-semibold">Usar saldo da carteira</Label>
+                                                                            <p className="text-xs text-muted-foreground">Saldo disponível: {walletAvailable.toFixed(2)}€</p>
+                                                                        </div>
+                                                                        <Switch checked={useWallet} onCheckedChange={setUseWallet} />
+                                                                    </div>
+                                                                )}
                                 <RadioGroup defaultValue="card" className="mb-4">
                                     <div className="flex items-center space-x-2 border p-4 rounded-md"><RadioGroupItem value="card" id="card" /><Label htmlFor="card" className="flex items-center gap-2 font-medium"><CreditCard className="h-5 w-5" /> Cartão de Crédito/Débito</Label></div>
                                 </RadioGroup>
@@ -176,11 +197,11 @@ export default function CheckoutPage() {
                         </Card>
                         <Button type="submit" size="lg" className="w-full" disabled={isProcessing}>
                             {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <CheckCircle className="ml-2 h-5 w-5" />}
-                            {`Pagar ${total.toFixed(2)}€ e Finalizar Encomenda`}
+                            {`Pagar ${effectiveTotal.toFixed(2)}€ e Finalizar Encomenda`}
                             {isVerificationEnabled ? " (Com Verificação)" : ""}
                         </Button>
                     </div>
-                    <div className="lg:col-span-1"><OrderSummary /></div>
+                    <div className="lg:col-span-1"><OrderSummary overrideTotal={effectiveTotal} walletApplied={useWallet ? effectiveWalletApplied : 0} /></div>
                 </form>
             </div>
         </div>

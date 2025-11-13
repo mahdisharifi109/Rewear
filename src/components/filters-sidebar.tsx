@@ -12,6 +12,9 @@ import { useCallback, useState, useEffect } from 'react';
 const conditions = ["Novo", "Muito bom", "Bom"];
 const brands = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac", "Outro"];
 const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
+const categories = ["Roupa", "Calçado", "Livros", "Eletrónica", "Outro"];
+const colors = ["Preto", "Branco", "Cinzento", "Azul", "Vermelho", "Verde", "Amarelo", "Rosa", "Castanho"];
+const locations = ["Lisboa", "Porto", "Braga", "Aveiro", "Coimbra", "Faro", "Setúbal", "Viseu", "Leiria", "Madeira", "Açores", "Portugal"];
 
 export function FiltersSidebar() {
   const router = useRouter();
@@ -22,17 +25,26 @@ export function FiltersSidebar() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]); // <-- ALTERADO para 1000
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]); 
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);   
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);  
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
 
   // Efeito para carregar os filtros a partir da URL
   useEffect(() => {
     const conditionsFromUrl = searchParams.get('conditions')?.split(',') || [];
     const brandsFromUrl = searchParams.get('brands')?.split(',') || [];
     const sizesFromUrl = searchParams.get('sizes')?.split(',') || [];
+    const colorsFromUrl = searchParams.get('colors')?.split(',') || [];
+    const locationsFromUrl = searchParams.get('locations')?.split(',') || [];
+    const categoriesFromUrl = searchParams.get('categories')?.split(',') || [];
     
     setSelectedConditions(conditionsFromUrl.filter(Boolean));
     setSelectedBrands(brandsFromUrl.filter(Boolean));
     setSelectedSizes(sizesFromUrl.filter(Boolean));
+    setSelectedColors(colorsFromUrl.filter(Boolean));
+    setSelectedLocations(locationsFromUrl.filter(Boolean));
+    setSelectedCategories(categoriesFromUrl.filter(Boolean));
 
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
@@ -114,6 +126,23 @@ export function FiltersSidebar() {
           <Button onClick={applyPriceFilter} size="sm" className="w-full">Aplicar Preço</Button>
         </div>
 
+        {/* Filtro de Categoria */}
+        <div className="space-y-2">
+          <Label>Categoria</Label>
+          <div className="space-y-2">
+            {categories.map(cat => (
+              <div key={cat} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`category-${cat}`}
+                  checked={selectedCategories.includes(cat)}
+                  onCheckedChange={(checked) => handleCheckboxChange(cat, !!checked, selectedCategories, setSelectedCategories, 'categories')}
+                />
+                <Label htmlFor={`category-${cat}`} className="font-normal">{cat}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Filtro de Marca */}
         <div className="space-y-2">
           <Label>Marca</Label>
@@ -143,6 +172,40 @@ export function FiltersSidebar() {
                   onCheckedChange={(checked) => handleCheckboxChange(size, !!checked, selectedSizes, setSelectedSizes, 'sizes')}
                 />
                 <Label htmlFor={`size-${size}`} className="font-normal">{size}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Filtro de Cor */}
+        <div className="space-y-2">
+          <Label>Cor</Label>
+          <div className="space-y-2">
+            {colors.map(color => (
+              <div key={color} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`color-${color}`}
+                  checked={selectedColors.includes(color)}
+                  onCheckedChange={(checked) => handleCheckboxChange(color, !!checked, selectedColors, setSelectedColors, 'colors')}
+                />
+                <Label htmlFor={`color-${color}`} className="font-normal">{color}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Filtro de Localização */}
+        <div className="space-y-2">
+          <Label>Localização</Label>
+          <div className="space-y-2 max-h-48 overflow-auto pr-2">
+            {locations.map(loc => (
+              <div key={loc} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`location-${loc}`}
+                  checked={selectedLocations.includes(loc)}
+                  onCheckedChange={(checked) => handleCheckboxChange(loc, !!checked, selectedLocations, setSelectedLocations, 'locations')}
+                />
+                <Label htmlFor={`location-${loc}`} className="font-normal">{loc}</Label>
               </div>
             ))}
           </div>

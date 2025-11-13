@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Wallet, Banknote } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import type { WalletTransaction } from '@/lib/types';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function WalletPage() {
   const { user, loading } = useAuth();
@@ -32,11 +38,51 @@ export default function WalletPage() {
     );
   }
 
-  const handleWithdraw = () => {
-    toast({
-      title: "Levantamento Simulado",
-      description: "Numa aplicação real, o seu saldo seria transferido para a sua conta bancária."
-    });
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [iban, setIban] = useState(user.iban || '');
+  const [loadingTx, setLoadingTx] = useState(false);
+
+  useEffect(() => {
+    const loadTx = async () => {
+      try {
+        const q = query(
+          collection(db, 'wallet_transactions'),
+          where('userId', '==', user.uid),
+          orderBy('createdAt', 'desc')
+        );
+        const snap = await getDocs(q);
+        const rows = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) })) as WalletTransaction[];
+        setTransactions(rows);
+      } catch (e) {
+        // silencioso; coleção pode não existir ainda
+      }
+    };
+    loadTx();
+  }, [user.uid]);
+
+  const walletAvailable = useMemo(() => (user.wallet?.available ?? user.walletBalance ?? 0), [user.wallet?.available, user.walletBalance]);
+  const walletPending = useMemo(() => (user.wallet?.pending ?? 0), [user.wallet?.pending]);
+
+  const handleWithdrawConfirm = async () => {
+    const amount = Number(withdrawAmount);
+    if (!iban || iban.length < 10) {
+      toast({ variant: 'destructive', title: 'IBAN inválido', description: 'Introduza um IBAN válido para levantar.' });
+      return;
+    }
+    if (!amount || amount <= 0 || amount > walletAvailable) {
+      toast({ variant: 'destructive', title: 'Montante inválido', description: 'O montante tem de ser positivo e <= saldo disponível.' });
+      return;
+    }
+    // Simulação apenas
+    setLoadingTx(true);
+    setTimeout(() => {
+      setLoadingTx(false);
+      setWithdrawOpen(false);
+      setWithdrawAmount('');
+      toast({ title: 'Levantamento solicitado', description: 'Processaremos a transferência para o seu IBAN.' });
+    }, 800);
   };
 
   return (
@@ -53,16 +99,46 @@ export default function WalletPage() {
         {/* Card de Saldo */}
         <Card className="md:col-span-1 flex flex-col justify-between h-full">
           <CardHeader className="text-center">
-            <CardTitle className="text-lg font-medium text-muted-foreground">Saldo Disponível</CardTitle>
-            <CardDescription className="text-5xl font-bold tracking-tight text-primary mt-2">
-              {user.walletBalance?.toFixed(2) ?? '0.00'}€
-            </CardDescription>
+            <CardTitle className="text-lg font-medium text-muted-foreground">Saldo</CardTitle>
+            <div className="mt-2 space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Disponível</p>
+                <p className="text-4xl font-bold tracking-tight text-primary">{walletAvailable.toFixed(2)}€</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Pendente</p>
+                <p className="text-xl font-semibold">{walletPending.toFixed(2)}€</p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
-            <Button size="lg" className="w-full max-w-xs" onClick={handleWithdraw}>
-              <Banknote className="mr-2 h-4 w-4" />
-              Levantar Saldo
-            </Button>
+            <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="w-full max-w-xs">
+                  <Banknote className="mr-2 h-4 w-4" />
+                  Levantar Saldo
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Levantamento</DialogTitle>
+                  <DialogDescription>Introduza o montante e IBAN para receber o saldo disponível.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Montante (máx. {walletAvailable.toFixed(2)}€)</Label>
+                    <Input type="number" min="0" step="0.01" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>IBAN</Label>
+                    <Input placeholder="PT50..." value={iban} onChange={(e) => setIban(e.target.value)} />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleWithdrawConfirm} disabled={loadingTx}>{loadingTx ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null} Confirmar</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <p className="mt-4 text-xs text-muted-foreground text-center">
               Os levantamentos são simulados e não resultam numa transferência real.
             </p>
@@ -85,33 +161,28 @@ export default function WalletPage() {
           </CardContent>
         </Card>
 
-        {/* Card de Histórico de Transações (mockup) */}
+        {/* Card de Histórico de Transações */}
         <Card className="md:col-span-1 flex flex-col justify-between h-full">
           <CardHeader className="text-center">
             <CardTitle className="text-lg font-medium">Histórico de Transações</CardTitle>
             <CardDescription>Últimas movimentações da sua carteira.</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Mockup de histórico */}
-            <ul className="space-y-3">
-              <li className="flex items-center justify-between">
-                <span className="font-semibold text-muted-foreground">Venda de artigo</span>
-                <span className="font-bold text-green-600">+12,00€</span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="font-semibold text-muted-foreground">Compra de artigo</span>
-                <span className="font-bold text-primary">-8,50€</span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="font-semibold text-muted-foreground">Levantamento</span>
-                <span className="font-bold text-yellow-600">-20,00€</span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="font-semibold text-muted-foreground">Bónus de boas-vindas</span>
-                <span className="font-bold text-green-600">+5,00€</span>
-              </li>
-            </ul>
-            <p className="mt-4 text-xs text-muted-foreground text-center">Movimentações simuladas para demonstração.</p>
+            {transactions.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center">Sem transações para mostrar.</p>
+            ) : (
+              <ul className="space-y-3">
+                {transactions.map(tx => (
+                  <li key={tx.id} className="flex items-center justify-between">
+                    <span className="font-semibold text-muted-foreground capitalize">{tx.type}</span>
+                    <span className={`font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-primary'}`}>
+                      {tx.amount >= 0 ? '+' : ''}{tx.amount.toFixed(2)}€
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-4 text-xs text-muted-foreground text-center">Algumas secções são simuladas.</p>
           </CardContent>
         </Card>
       </div>
