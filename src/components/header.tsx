@@ -29,7 +29,7 @@ import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBat
 import type { Notification } from "@/lib/types";
 
 // Dynamic Import para o SideCart (Otimização de Performance)
-const DynamicSideCart = dynamic(() => import("./side-cart").then(mod => mod.SideCart), {
+const DynamicSideCart = dynamic(() => import("./side-cart"), {
     ssr: false,
 });
 
@@ -379,3 +379,5 @@ export function Header() {
     </header>
   );
 }
+
+export default Header;

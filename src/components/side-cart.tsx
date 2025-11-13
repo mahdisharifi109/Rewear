@@ -96,3 +96,5 @@ function SideCartComponent({ open, onOpenChange }: SideCartProps) {
 export const SideCart = memo(SideCartComponent, (prev, next) => 
   prev.open === next.open && prev.onOpenChange === next.onOpenChange
 );
+
+export default SideCart;

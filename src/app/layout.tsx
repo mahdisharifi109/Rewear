@@ -1,6 +1,6 @@
 import type {Metadata} from 'next';
 import './globals.css';
-import { Header } from '@/components/header';
+import { ClientOnlyHeader } from '@/components/client-only-header';
 import { CartProvider } from '@/context/cart-context';
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/context/auth-context';
@@ -58,7 +58,7 @@ export default function RootLayout({
             <ProductProvider>
               <CartProvider>
                 <div className="flex min-h-screen flex-col">
-                  <Header />
+                  <ClientOnlyHeader />
                   <main id="main-content" className="flex-1">
                     <Suspense fallback={<PageFallback />}>
                       {children}
