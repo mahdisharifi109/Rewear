@@ -5,7 +5,7 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import dynamic from "next/dynamic";
+import ProductCard from "@/components/product-card";
 import { useProducts } from "@/context/product-context";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
@@ -23,10 +23,6 @@ const ProductCardSkeleton = () => (
   </div>
 );
 
-// Define ProductCard como um componente lazy-loaded
-const DynamicProductCard = dynamic(() => import("@/components/product-card"), {
-  loading: () => <ProductCardSkeleton />,
-});
 
 interface ProductGridProps {
   personalized?: boolean;
@@ -209,9 +205,9 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
           <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product, index) => {
               if (filteredProducts.length === index + 1 && showLoadMore) {
-                return <div ref={lastProductElementRef} key={product.id}><DynamicProductCard product={product} /></div>
+                return <div ref={lastProductElementRef} key={product.id}><ProductCard product={product} /></div>
               }
-              return <DynamicProductCard key={product.id} product={product} />
+              return <ProductCard key={product.id} product={product} />
             })}
           </div>
           {isLoadingMore && (

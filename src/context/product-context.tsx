@@ -7,10 +7,10 @@ import React, { createContext, useContext, useState, ReactNode, useMemo, useCall
 import { collection, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc, updateDoc, getDocs, limit, startAfter, QueryDocumentSnapshot, DocumentData, where, QueryConstraint } from 'firebase/firestore'; 
 import { db } from '@/lib/firebase';
 import { useSearchParams } from 'next/navigation';
-import { productCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 
 // Otimizado: mais produtos por página = menos queries ao Firestore
-const PRODUCTS_PER_PAGE = 16; 
+// Número de produtos por página - otimizado para carregamento rápido inicial
+const PRODUCTS_PER_PAGE = 12;
 
 type NewProduct = Omit<Product, 'id' | 'createdAt'>;
 
@@ -65,23 +65,14 @@ export function ProductProvider({ children }: { children: ReactNode }) {
 
 
   const fetchProducts = useCallback(async (isInitialLoad: boolean, lastDocRef?: QueryDocumentSnapshot<DocumentData> | null) => {
+      console.log('🔍 Iniciando fetchProducts...', { isInitialLoad, hasLastDoc: !!lastDocRef });
       setLoading(true);
       try {
-          // Gerar chave de cache baseada nos filtros
-          const cacheKey = CACHE_KEYS.PRODUCTS_PAGE(
-            isInitialLoad ? 0 : 1, 
-            searchParams.toString()
-          );
-          
-          // Tentar obter do cache primeiro (apenas para carregamento inicial)
-          if (isInitialLoad) {
-            const cachedData = productCache.get<Product[]>(cacheKey);
-            if (cachedData && cachedData.length > 0) {
-              setProducts(cachedData);
-              setLoading(false);
-              return; // Usar dados em cache
-            }
-          }
+            console.log('🔥 Firebase configurado:', { 
+              hasDB: !!db, 
+              constraints: queryConstraints.length,
+              hasPriceRange 
+            });
           
           const productsCollection = collection(db, 'products');
           
@@ -121,16 +112,18 @@ export function ProductProvider({ children }: { children: ReactNode }) {
           }
           
           const documentSnapshots = await getDocs(q);
+          console.log('📦 Query executada:', {
+            totalDocs: documentSnapshots.size,
+            empty: documentSnapshots.empty,
+            firstIds: documentSnapshots.docs.slice(0,3).map(d=>d.id)
+          });
           
           const fetchedProducts = documentSnapshots.docs.map(doc => ({
               id: doc.id,
               ...doc.data()
           })) as Product[];
           
-          // Guardar no cache (apenas primeira página)
-          if (isInitialLoad && fetchedProducts.length > 0) {
-            productCache.set(cacheKey, fetchedProducts, CACHE_TTL.PRODUCTS_LIST);
-          }
+          console.log(`✅ Produtos carregados: ${fetchedProducts.length}`);
           
           setProducts(prevProducts => isInitialLoad ? fetchedProducts : [...prevProducts, ...fetchedProducts]);
           
@@ -139,8 +132,8 @@ export function ProductProvider({ children }: { children: ReactNode }) {
           
           setHasMoreProducts(documentSnapshots.docs.length === PRODUCTS_PER_PAGE);
 
-      } catch (error) {
-          console.error("Erro ao carregar produtos:", error);
+        } catch (error) {
+          console.error('❌ Erro ao buscar produtos:', error);
       } finally {
           setLoading(false);
       }
