@@ -108,9 +108,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               alt={product.name}
               fill
               loading="lazy"
-              fetchPriority="low"
               sizes="(max-width: 768px) 50vw, 33vw"
               className="object-cover transition-organic group-hover:scale-110 motion-reduce:transition-none motion-reduce:transform-none"
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiLz4="
             />
              {product.status === 'vendido' && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">

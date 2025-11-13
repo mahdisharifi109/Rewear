@@ -1,4 +1,4 @@
-// src/context/product-context.tsx (Refatorado para Filtros no Servidor)
+// src/context/product-context.tsx (Refatorado para Filtros no Servidor + Cache)
 
 "use client";
 
@@ -6,9 +6,11 @@ import type { Product } from '@/lib/types';
 import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect, useRef } from 'react'; 
 import { collection, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc, updateDoc, getDocs, limit, startAfter, QueryDocumentSnapshot, DocumentData, where, QueryConstraint } from 'firebase/firestore'; 
 import { db } from '@/lib/firebase';
-import { useSearchParams } from 'next/navigation'; // Importado para obter filtros
+import { useSearchParams } from 'next/navigation';
+import { productCache, CACHE_KEYS, CACHE_TTL } from '@/lib/cache';
 
-const PRODUCTS_PER_PAGE = 8; 
+// Otimizado: mais produtos por página = menos queries ao Firestore
+const PRODUCTS_PER_PAGE = 16; 
 
 type NewProduct = Omit<Product, 'id' | 'createdAt'>;
 
@@ -65,6 +67,22 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const fetchProducts = useCallback(async (isInitialLoad: boolean, lastDocRef?: QueryDocumentSnapshot<DocumentData> | null) => {
       setLoading(true);
       try {
+          // Gerar chave de cache baseada nos filtros
+          const cacheKey = CACHE_KEYS.PRODUCTS_PAGE(
+            isInitialLoad ? 0 : 1, 
+            searchParams.toString()
+          );
+          
+          // Tentar obter do cache primeiro (apenas para carregamento inicial)
+          if (isInitialLoad) {
+            const cachedData = productCache.get<Product[]>(cacheKey);
+            if (cachedData && cachedData.length > 0) {
+              setProducts(cachedData);
+              setLoading(false);
+              return; // Usar dados em cache
+            }
+          }
+          
           const productsCollection = collection(db, 'products');
           
           // Construir a consulta com base nos filtros da URL e na paginação
@@ -109,10 +127,15 @@ export function ProductProvider({ children }: { children: ReactNode }) {
               ...doc.data()
           })) as Product[];
           
+          // Guardar no cache (apenas primeira página)
+          if (isInitialLoad && fetchedProducts.length > 0) {
+            productCache.set(cacheKey, fetchedProducts, CACHE_TTL.PRODUCTS_LIST);
+          }
+          
           setProducts(prevProducts => isInitialLoad ? fetchedProducts : [...prevProducts, ...fetchedProducts]);
           
           const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-          setLastDoc(lastVisible || null); // Guardar o último documento (ou null se for o fim)
+          setLastDoc(lastVisible || null);
           
           setHasMoreProducts(documentSnapshots.docs.length === PRODUCTS_PER_PAGE);
 

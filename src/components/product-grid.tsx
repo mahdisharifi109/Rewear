@@ -11,7 +11,8 @@ import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Loader2 } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
-import type { Product } from "@/lib/types"; 
+import type { Product } from "@/lib/types";
+import { usePrefetchProducts } from "@/hooks/use-prefetch"; 
 
 // Componente de Skeleton para o ProductCard
 const ProductCardSkeleton = () => (
@@ -40,6 +41,9 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
 
   const loadMoreTimeoutRef = useRef<NodeJS.Timeout>();
   
+  // Prefetch inteligente dos primeiros produtos
+  usePrefetchProducts(products);
+  
   const handleLoadMore = useCallback(async () => {
     if (isLoadingMore || !hasMoreProducts) return;
     
@@ -55,7 +59,7 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
       } finally {
         setIsLoadingMore(false);
       }
-    }, 150);
+    }, 100); // Reduzido de 150ms para 100ms para resposta mais rápida
   }, [isLoadingMore, hasMoreProducts, loadMoreProducts]);
 
   // Observer para o scroll infinito com threshold otimizado
@@ -67,8 +71,8 @@ export function ProductGrid({ personalized = false }: ProductGridProps) {
         handleLoadMore();
       }
     }, { 
-      rootMargin: '600px',
-      threshold: 0.1
+      rootMargin: '800px', // Aumentado para pré-carregar mais cedo
+      threshold: 0.05 // Threshold menor para trigger mais rápido
     }); 
     if (node) observer.current.observe(node);
   }, [isLoadingMore, hasMoreProducts, handleLoadMore]);
