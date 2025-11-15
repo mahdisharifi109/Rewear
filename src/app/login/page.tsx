@@ -37,7 +37,7 @@ export default function LoginPage() {
           description: "Bem-vindo de volta!",
         });
         router.push(redirectUrl);
-    } catch (error: any) {
+    } catch (error) {
         console.error("Erro no login:", error);
         let description = "Ocorreu um erro. Por favor, tente novamente.";
         

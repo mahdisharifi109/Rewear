@@ -7,6 +7,7 @@ import React, { createContext, useContext, useState, ReactNode, useMemo, useCall
 import { collection, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc, updateDoc, getDocs, limit, startAfter, QueryDocumentSnapshot, DocumentData, where, QueryConstraint } from 'firebase/firestore'; 
 import { db } from '@/lib/firebase';
 import { useSearchParams } from 'next/navigation';
+import { CacheManager, CACHE_CONFIG } from '@/lib/cache-manager';
 
 // Otimizado: mais produtos por página = menos queries ao Firestore
 // Número de produtos por página - otimizado para carregamento rápido inicial
@@ -66,6 +67,20 @@ export function ProductProvider({ children }: { children: ReactNode }) {
 
   const fetchProducts = useCallback(async (isInitialLoad: boolean, lastDocRef?: QueryDocumentSnapshot<DocumentData> | null) => {
       console.log('🔍 Iniciando fetchProducts...', { isInitialLoad, hasLastDoc: !!lastDocRef });
+      
+      // 🚀 Tentar carregar do cache primeiro (apenas no carregamento inicial)
+      if (isInitialLoad && !lastDocRef) {
+        const cachedProducts = CacheManager.get<Product[]>(CACHE_CONFIG.PRODUCTS.KEY);
+        if (cachedProducts && cachedProducts.length > 0) {
+          console.log('✅ Produtos carregados do CACHE:', cachedProducts.length);
+          setProducts(cachedProducts);
+          setLoading(false);
+          setHasMoreProducts(cachedProducts.length >= PRODUCTS_PER_PAGE);
+          return;
+        }
+        console.log('📭 Cache vazio ou expirado, buscando do Firebase...');
+      }
+      
       setLoading(true);
       try {
             console.log('🔥 Firebase configurado:', { 
@@ -125,7 +140,18 @@ export function ProductProvider({ children }: { children: ReactNode }) {
           
           console.log(`✅ Produtos carregados: ${fetchedProducts.length}`);
           
-          setProducts(prevProducts => isInitialLoad ? fetchedProducts : [...prevProducts, ...fetchedProducts]);
+          const newProducts = isInitialLoad ? fetchedProducts : [...products, ...fetchedProducts];
+          setProducts(newProducts);
+          
+          // 💾 Salvar no cache (apenas primeira página)
+          if (isInitialLoad && fetchedProducts.length > 0) {
+            CacheManager.set(
+              CACHE_CONFIG.PRODUCTS.KEY,
+              fetchedProducts,
+              CACHE_CONFIG.PRODUCTS.EXPIRY
+            );
+            console.log('💾 Produtos salvos no cache');
+          }
           
           const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
           setLastDoc(lastVisible || null);

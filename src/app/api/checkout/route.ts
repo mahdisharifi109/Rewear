@@ -46,8 +46,8 @@ export async function POST(req: NextRequest) {
       const buyerRef = doc(db, 'users', userId);
       const buyerSnap = await getDoc(buyerRef);
       if (buyerSnap.exists()) {
-        const buyer = buyerSnap.data() as any;
-        const available = (buyer.wallet?.available ?? buyer.walletBalance ?? 0) as number;
+        const buyer = buyerSnap.data();
+        const available = Number(buyer?.wallet?.available ?? buyer?.walletBalance ?? 0);
         walletApplied = Math.min(available, orderTotal);
         orderTotal = Math.max(0, orderTotal - walletApplied);
       }

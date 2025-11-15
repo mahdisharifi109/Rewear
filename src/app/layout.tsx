@@ -7,15 +7,19 @@ import { AuthProvider } from '@/context/auth-context';
 import { ProductProvider } from '@/context/product-context';
 import { Suspense } from 'react';
 import { ClientOnlyFooter } from '@/components/client-only-footer';
-import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
+import { ClientServiceWorker } from '@/components/client-service-worker';
 import { ErrorBoundary } from '@/components/error-boundary';
 
 export const metadata: Metadata = {
   title: 'Rewear — Moda Sustentável em Segunda Mão',
   description: 'Compre e venda roupa em segunda mão. Uma forma consciente de renovar o guarda-roupa e cuidar do planeta.',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
-  themeColor: '#ffffff',
   manifest: '/manifest.json',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#ffffff',
 };
 
 function PageFallback() {
@@ -48,7 +52,7 @@ export default function RootLayout({
         >
           Ir para o conteúdo
         </a>
-        <ServiceWorkerRegistration />
+        <ClientServiceWorker />
         <AuthProvider>
           <Suspense fallback={<PageFallback />}>
             <ProductProvider>
@@ -56,7 +60,7 @@ export default function RootLayout({
                 <ErrorBoundary>
                   <div className="flex min-h-screen flex-col">
                     <ClientOnlyHeader />
-                    <main id="main-content" className="flex-1">
+                    <main id="main-content" className="flex-1" role="main">
                       <Suspense fallback={<PageFallback />}>
                         {children}
                       </Suspense>

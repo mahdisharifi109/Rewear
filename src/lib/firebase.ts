@@ -20,7 +20,17 @@ const firebaseConfig = {
 // Inicializar a app Firebase de forma segura
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
-const auth = getAuth(app);
-const storage = getStorage(app); // Inicializa e exporta o Storage
 
-export { app, db, auth, storage }; // Exporta o storage
+// Evita inicializar Auth no ambiente Node (scripts) para não exigir API Key válida
+let auth: import('firebase/auth').Auth | null = null;
+if (typeof window !== 'undefined') {
+  try {
+    auth = getAuth(app);
+  } catch (e) {
+    // Ignorar em SSR/scripts
+  }
+}
+
+const storage = getStorage(app);
+
+export { app, db, auth, storage };

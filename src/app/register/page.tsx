@@ -46,7 +46,7 @@ export default function RegisterPage() {
       });
       router.push('/');
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro no registo:", error);
       let description = "Ocorreu um erro. Por favor, tente novamente.";
       if (error.code === 'auth/email-already-in-use') {

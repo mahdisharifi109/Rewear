@@ -3,32 +3,23 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // --- PRODUCTS ---
+    // Produtos públicos para leitura (não exige autenticação)
     match /products/{productId} {
-      allow read: if request.auth != null;
+      allow read: if true;
 
-      // ... (Regras de Create/Update/Delete de Products permanecem inalteradas)
-      allow create: if request.auth != null 
+      // Criar produto: utilizador autenticado é o dono
+      allow create: if request.auth != null
                     && request.auth.uid == request.resource.data.userId
-                    && request.resource.data.name is string && request.resource.data.name.size() >= 5
-                    && request.resource.data.description is string && request.resource.data.description.size() >= 10
                     && request.resource.data.price is number && request.resource.data.price > 0
-                    && request.resource.data.quantity is number && request.resource.data.quantity > 0
-                    && request.resource.data.imageUrls is list && request.resource.data.imageUrls.size() > 0
-                    && request.resource.data.status == 'disponível'
-                    && request.resource.data.category in ['Roupa', 'Calçado', 'Livros', 'Eletrónica', 'Outro']
-                    && request.resource.data.condition in ['Novo', 'Muito bom', 'Bom']
-                    && request.resource.data.userEmail == request.auth.token.email
-                    && request.resource.data.keys().hasAll([
-                        'userId', 'name', 'description', 'price', 'quantity', 
-                        'category', 'condition', 'imageUrls', 'status', 'createdAt', 
-                        'userEmail', 'userName', 'imageHint'
-                    ]);
-        
-      allow update: if request.auth != null 
+                    && request.resource.data.name is string && request.resource.data.name.size() >= 3
+                    && request.resource.data.imageUrls is list && request.resource.data.imageUrls.size() > 0;
+
+      // Atualizar: apenas o dono. Permitir mudança de status para 'vendido'
+      allow update: if request.auth != null
                     && request.auth.uid == resource.data.userId
-                    && request.resource.data.userId == resource.data.userId
-                    && (request.resource.data.status == 'vendido' || request.resource.data.status == resource.data.status); 
-      
+                    && request.resource.data.userId == resource.data.userId;
+
+      // Apagar: apenas o dono
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
@@ -69,6 +60,12 @@ service cloud.firestore {
     match /conversations/{conversationId}/messages/{messageId} {
       allow read: if request.auth != null && get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds.hasAny([request.auth.uid]);
       allow create: if request.auth != null && request.auth.uid == request.resource.data.senderId;
+    }
+
+    // --- WALLET TRANSACTIONS ---
+    match /wallet_transactions/{transactionId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null; // Permitir criação durante checkout
     }
   }
 }

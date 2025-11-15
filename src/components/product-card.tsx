@@ -25,12 +25,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import React from "react";
+import { optimizeImageUrl } from "@/hooks/use-image-optimization";
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean; // Adicionar prop para controlar prioridade
+  index?: number; // Índice para otimização
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false, index = 0 }) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
   const { user, addToWallet } = useAuth();
@@ -38,6 +41,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const router = useRouter();
 
   const isOwner = user && user.uid === product.userId;
+  
+  // Otimizar carregamento: primeiras 6 imagens com prioridade
+  const shouldLoadWithPriority = priority || index < 6;
 
   const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest('.card-actions-footer')) {
@@ -69,7 +75,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     try {
       await deleteProduct(product.id);
       toast({ title: "Produto Removido", description: "O seu produto foi removido com sucesso." });
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Erro ao apagar produto:', error);
       toast({ variant: "destructive", title: "Erro ao apagar", description: `Não foi possível remover o produto.` });
     }
   };
@@ -104,14 +111,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <CardHeader className="p-0">
           <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/30 rounded-t-[0.75rem]">
             <Image
-              src={product.imageUrls[0]}
+              src={optimizeImageUrl(product.imageUrls[0], 700)}
               alt={product.name}
               fill
-              loading="lazy"
-              sizes="(max-width: 768px) 50vw, 33vw"
+              priority={shouldLoadWithPriority}
+              loading={shouldLoadWithPriority ? 'eager' : 'lazy'}
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-organic group-hover:scale-110 motion-reduce:transition-none motion-reduce:transform-none"
               placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiLz4="
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
             />
              {product.status === 'vendido' && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
