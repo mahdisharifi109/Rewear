@@ -41,12 +41,14 @@ const useTheme = () => {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     
     useEffect(() => {
+        if (typeof window === 'undefined') return;
         const root = window.document.documentElement;
         const currentTheme = root.classList.contains('dark') ? 'dark' : 'light';
         setTheme(currentTheme);
     }, []);
     
     const toggleTheme = () => {
+        if (typeof window === 'undefined') return;
         const root = window.document.documentElement;
         const isDark = root.classList.contains('dark');
         const newTheme = isDark ? 'light' : 'dark';

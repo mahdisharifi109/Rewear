@@ -24,3 +24,5 @@ export function ClientServiceWorker() {
 
   return null;
 }
+
+export default ClientServiceWorker;

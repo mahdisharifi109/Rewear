@@ -32,6 +32,7 @@ export class CacheManager {
    * Salva dados no cache com timestamp
    */
   static set<T>(key: string, data: T, expiresIn: number): void {
+    if (typeof window === 'undefined') return;
     try {
       const cacheItem: CacheItem<T> = {
         data,
@@ -48,6 +49,7 @@ export class CacheManager {
    * Recupera dados do cache se ainda forem válidos
    */
   static get<T>(key: string): T | null {
+    if (typeof window === 'undefined') return null;
     try {
       const item = localStorage.getItem(key);
       if (!item) return null;
@@ -73,6 +75,7 @@ export class CacheManager {
    * Remove um item específico do cache
    */
   static remove(key: string): void {
+    if (typeof window === 'undefined') return;
     try {
       localStorage.removeItem(key);
     } catch (error) {
