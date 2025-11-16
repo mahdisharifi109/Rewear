@@ -57,12 +57,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Função para re-buscar os dados do utilizador
   const refetchUser = useCallback(async () => {
-      if (auth.currentUser) {
-          await fetchUserData(auth.currentUser);
-      }
+    // Garantir que auth não é null (SSR ou ambiente sem window)
+    if (!auth) return;
+    const current = auth.currentUser;
+    if (current) {
+      await fetchUserData(current);
+    }
   }, [fetchUserData]);
 
   useEffect(() => {
+    if (!auth) {
+      // Se auth for null (SSR), marcar como carregado e sair
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         await fetchUserData(firebaseUser);
@@ -71,11 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, [fetchUserData]);
 
   const logout = useCallback(async () => {
+    if (!auth) return;
     try {
       await signOut(auth);
     } catch (error) {

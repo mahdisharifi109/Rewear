@@ -54,11 +54,11 @@ export async function getProductsWithPagination(pageSize = 12, filters?: Product
   }
 
   const snapshot = await getDocs(q);
-  const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const products: Product[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
   const lastDoc = snapshot.docs[snapshot.docs.length - 1];
 
   if (!filters && !lastDocSnapshot && products.length) {
-    const payload: CachePayload = { products, timestamp: Date.now(), lastDocId: lastDoc?.id };
+    const payload: CachePayload = { products: products as Product[], timestamp: Date.now(), lastDocId: lastDoc?.id };
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
     } catch {}

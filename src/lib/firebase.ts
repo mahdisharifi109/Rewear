@@ -2,7 +2,7 @@
 // Imports modulares otimizados para reduzir bundle size
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
@@ -19,7 +19,13 @@ const firebaseConfig = {
 
 // Inicializar a app Firebase de forma segura
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
+
+// Inicializar Firestore com cache persistente para melhor performance
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
 
 // Evita inicializar Auth no ambiente Node (scripts) para não exigir API Key válida
 let auth: import('firebase/auth').Auth | null = null;

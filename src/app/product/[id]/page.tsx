@@ -23,6 +23,7 @@ import { StarRating } from '@/components/ui/star-rating';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import type { Conversation } from '@/lib/types';
+import { ErrorBoundary } from '@/components/error-boundary';
 // REMOVIDO: Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
 
 export default function ProductDetailPage() {
@@ -46,7 +47,17 @@ export default function ProductDetailPage() {
   // const [aiVideoUrl, setAiVideoUrl] = useState<string | null>(null);
 
   if (!product) {
-    return <div className="container py-16 text-center"><h1 className="text-4xl font-bold">Produto não encontrado</h1></div>;
+    return (
+      <ErrorBoundary>
+        <div className="container py-16 text-center">
+          <h1 className="text-4xl font-bold">Produto não encontrado</h1>
+          <p className="text-muted-foreground mt-4">O produto que procura não existe ou foi removido.</p>
+          <Button asChild className="mt-6">
+            <Link href="/catalog">Voltar ao Catálogo</Link>
+          </Button>
+        </div>
+      </ErrorBoundary>
+    );
   }
 
   const isOwner = user && user.uid === product.userId;
@@ -120,6 +131,7 @@ export default function ProductDetailPage() {
   // REMOVIDO: Função handleAIVideoCreation
 
   return (
+    <ErrorBoundary>
     <div className="bg-muted/40">
       <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
@@ -213,5 +225,6 @@ export default function ProductDetailPage() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

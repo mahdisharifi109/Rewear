@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useToast } from "@/hooks/use-toast";
 import { registerSchema, type RegisterFormValues } from "@/lib/schemas";
 import { auth, db } from "@/lib/firebase";
+import { logger } from '@/lib/logger';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useState } from "react";
@@ -29,6 +30,9 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
+      if (!auth) {
+        throw new Error('Firebase Auth não está disponível.');
+      }
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
@@ -47,9 +51,10 @@ export default function RegisterPage() {
       router.push('/');
 
     } catch (error) {
-      console.error("Erro no registo:", error);
+      logger.error("Erro no registo:", error);
       let description = "Ocorreu um erro. Por favor, tente novamente.";
-      if (error.code === 'auth/email-already-in-use') {
+      const firebaseError = error as { code?: string };
+      if (firebaseError.code === 'auth/email-already-in-use') {
         description = "Este email já está a ser utilizado por outra conta.";
       }
       toast({

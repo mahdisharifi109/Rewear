@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useToast } from "@/hooks/use-toast";
 import { loginSchema, type LoginFormValues } from "@/lib/schemas";
 import { auth } from "@/lib/firebase";
+import { logger } from '@/lib/logger';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -31,6 +32,9 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
+          if (!auth) {
+            throw new Error('Firebase Auth não está disponível.');
+          }
         await signInWithEmailAndPassword(auth, data.email, data.password);
         toast({
           title: "Sessão iniciada!",
@@ -38,13 +42,14 @@ export default function LoginPage() {
         });
         router.push(redirectUrl);
     } catch (error) {
-        console.error("Erro no login:", error);
+          logger.error("Erro no login:", error);
         let description = "Ocorreu um erro. Por favor, tente novamente.";
         
         // Mensagens de erro mais específicas
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+          const firebaseError = error as { code?: string };
+          if (firebaseError.code === 'auth/invalid-credential' || firebaseError.code === 'auth/wrong-password' || firebaseError.code === 'auth/user-not-found') {
             description = "O email ou a palavra-passe estão incorretos.";
-        } else if (error.code === 'auth/too-many-requests') {
+          } else if (firebaseError.code === 'auth/too-many-requests') {
             description = "Acesso temporariamente bloqueado devido a demasiadas tentativas. Tente novamente mais tarde.";
         }
         

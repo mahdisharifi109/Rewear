@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CreditCard, CheckCircle, ShieldCheck, Loader2 } from "lucide-react"; // <-- ADICIONADO Loader2
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/context/auth-context";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 // Componente para o Resumo da Encomenda (à direita)
 const OrderSummary = ({ overrideTotal, walletApplied }: { overrideTotal?: number; walletApplied?: number }) => {
@@ -156,6 +157,7 @@ export default function CheckoutPage() {
     }
 
     return (
+        <ErrorBoundary>
         <div className="bg-muted/40">
             <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
                 <div className="text-center mb-10">
@@ -224,5 +226,6 @@ export default function CheckoutPage() {
                 </form>
             </div>
         </div>
+        </ErrorBoundary>
     );
 }
