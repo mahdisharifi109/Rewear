@@ -18,6 +18,8 @@ import { useAuth } from "@/context/auth-context";
 import { sellFormSchema, type SellFormValues } from "@/lib/schemas";
 import { SelectOrInput } from "./ui/select-or-input";
 import { fileToDataUri } from "@/lib/imageUtils"; // Importar a função
+import { storage } from "@/lib/firebase";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const PREDEFINED_BRANDS = ["Nike", "Adidas", "Zara", "H&M", "Apple", "Samsung", "Fnac"];
 const PREDEFINED_MATERIALS = ["Algodão", "Poliéster", "Lã", "Seda", "Plástico", "Metal"];
@@ -59,26 +61,46 @@ export function SellForm() {
     }
     setIsSubmitting(true);
     try {
-        const imageUrls = await Promise.all(
-      data.images.map(async image => {
-        if (typeof image === 'string') return image;
-        // Compressão via canvas antes do fileToDataUri
-        const file = image as File;
-        const img = document.createElement('img');
-        const url = URL.createObjectURL(file);
-        await new Promise(resolve => { img.onload = resolve; img.src = url; });
-        const canvas = document.createElement('canvas');
-        const MAX_SIZE = 1200;
-        const scale = Math.min(1, MAX_SIZE / Math.max(img.width, img.height));
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        URL.revokeObjectURL(url);
-        return compressedDataUrl;
-      })
-        );
+        // 1) Validação rápida no cliente (tipo e tamanho) – regras também validam no servidor
+        const files = (data.images || []).filter((f): f is File => typeof f !== 'string');
+        for (const f of files) {
+          if (!f.type.startsWith('image/')) {
+            toast({ variant: "destructive", title: "Ficheiro inválido", description: `Apenas imagens são permitidas. (${f.name})` });
+            return;
+          }
+          if (f.size > 5 * 1024 * 1024) {
+            toast({ variant: "destructive", title: "Imagem muito grande", description: `${f.name} excede 5MB.` });
+            return;
+          }
+        }
+
+        // 2) Upload para Firebase Storage (com compressão simples via canvas)
+        async function compressToBlob(file: File): Promise<Blob> {
+          const img = document.createElement('img');
+          const tmpUrl = URL.createObjectURL(file);
+          await new Promise<void>((resolve) => { img.onload = () => resolve(); img.src = tmpUrl; });
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 1200;
+          const scale = Math.min(1, MAX_SIZE / Math.max(img.width, img.height));
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(tmpUrl);
+          return await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b as Blob), 'image/jpeg', 0.8));
+        }
+
+        const uploadPromises = (data.images || []).map(async (image, idx) => {
+          if (typeof image === 'string') return image; // já é URL
+          const blob = await compressToBlob(image as File);
+          const path = `products/${user.uid}/${Date.now()}-${idx}.jpg`;
+          const ref = storageRef(storage, path);
+          await uploadBytes(ref, blob, { contentType: 'image/jpeg' });
+          const url = await getDownloadURL(ref);
+          return url;
+        });
+
+        const imageUrls = await Promise.all(uploadPromises);
         
         const sizesArray = data.sizes ? data.sizes.split(',').map(s => s.trim().toUpperCase()) : [];
 
