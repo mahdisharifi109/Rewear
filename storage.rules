@@ -1,30 +1,110 @@
-// Ficheiro: storage.rules
+// ================================================================
+// FIREBASE STORAGE RULES - Rewear Marketplace
+// ================================================================
+// Regras de segurança para upload de imagens de produtos e perfis
+// Implementa validações de tamanho, tipo, ownership e limites
+// ================================================================
 
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // As imagens dos produtos são públicas para leitura por qualquer pessoa
+    
+    // === HELPER FUNCTIONS ===
+    
+    // Verifica se o utilizador está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica se o utilizador é o dono do recurso
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Valida tipo de imagem permitido (JPEG, PNG, WebP, GIF)
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
+    }
+    
+    // Valida tamanho máximo para produtos (5MB)
+    function isValidProductSize() {
+      return request.resource.size < 5 * 1024 * 1024;  // 5MB
+    }
+    
+    // Valida tamanho máximo para perfis (2MB)
+    function isValidProfileSize() {
+      return request.resource.size < 2 * 1024 * 1024;  // 2MB
+    }
+    
+    // === IMAGENS DE PRODUTOS ===
+    // Organizadas por utilizador: /products/{userId}/{productId}/{imageName}
+    
+    // Leitura pública (marketplace aberto)
     match /products/{allPaths=**} {
-      allow read: if true;
+      allow read: if true;  // Qualquer pessoa pode ver produtos
     }
 
-    // Um utilizador só pode escrever na sua própria pasta
-    // Máximo 5MB por imagem de produto, apenas imagens
-    match /products/{userId}/{allPaths=**} {
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId
-                   && request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+    // Upload de imagens de produtos
+    match /products/{userId}/{productId}/{imageName} {
+      // Upload: apenas o dono + validações rigorosas
+      allow write: if isOwner(userId)
+                   && isValidImageType()
+                   && isValidProductSize();
+      
+      // Apagar: apenas o dono
+      allow delete: if isOwner(userId);
     }
-
-    // Imagens de perfil dos utilizadores
+    
+    // === IMAGENS DE PERFIL ===
+    // Organizadas por utilizador: /users/{userId}/profile/{imageName}
+    
+    // Leitura pública (para exibir perfis)
+    match /users/{userId}/profile/{imageName} {
+      allow read: if true;  // Perfis são públicos
+      
+      // Upload: apenas o próprio utilizador
+      allow write: if isOwner(userId)
+                   && isValidImageType()
+                   && isValidProfileSize();
+      
+      // Apagar: apenas o próprio utilizador
+      allow delete: if isOwner(userId);
+    }
+    
+    // === OUTRAS PASTAS DE UTILIZADOR ===
+    // Qualquer outra pasta do utilizador (documentos, etc.)
     match /users/{userId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId
-                   && request.resource.size < 2 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+      allow read: if isOwner(userId);  // Apenas o dono lê
+      
+      // Upload: limite de 10MB para outros ficheiros
+      allow write: if isOwner(userId)
+                   && request.resource.size < 10 * 1024 * 1024;  // 10MB
+      
+      allow delete: if isOwner(userId);
+    }
+    
+    // === BLOQUEIO GERAL ===
+    // Negar acesso a qualquer outro path não especificado
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
+
+// ================================================================
+// LIMITES E RECOMENDAÇÕES (Plano Spark - Gratuito)
+// ================================================================
+// 
+// Armazenamento Total: 5 GB
+// Downloads: 1 GB/dia (~1000 visualizações)
+// Uploads: 1 GB/dia (~200 produtos/dia)
+//
+// BOAS PRÁTICAS:
+// 1. Comprimir imagens antes de upload (TinyPNG, Squoosh)
+// 2. Usar WebP format (50% menor que JPEG)
+// 3. Gerar thumbnails no Cloud Functions (150x150px para listagens)
+// 4. Limitar a 3-5 imagens por produto
+// 5. Implementar rate limiting no cliente (max 10 uploads/min)
+//
+// ================================================================

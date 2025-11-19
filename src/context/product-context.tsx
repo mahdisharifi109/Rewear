@@ -1,17 +1,30 @@
-// src/context/product-context.tsx (Refatorado para Filtros no Servidor + Cache)
+// ================================================================
+// PRODUCT CONTEXT (REFATORADO COM TANSTACK QUERY)
+// ================================================================
+// Migrado de localStorage manual para TanStack Query
+// - Cache automático com 5 minutos de validade
+// - Invalidação inteligente de cache
+// - Paginação otimizada com useInfiniteQuery
+// - Filtros aplicados server-side via Firestore
+// ================================================================
 
 "use client";
 
-import type { Product } from '@/lib/types';
-import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect, useRef } from 'react'; 
-import { collection, doc, setDoc, serverTimestamp, query, orderBy, deleteDoc, updateDoc, getDocs, limit, startAfter, QueryDocumentSnapshot, DocumentData, where, QueryConstraint } from 'firebase/firestore'; 
-import { db } from '@/lib/firebase';
+import React, { createContext, useContext, ReactNode, useMemo, useCallback } from 'react'; 
 import { useSearchParams } from 'next/navigation';
-import { CacheManager, CACHE_CONFIG } from '@/lib/cache-manager';
+import { 
+  useProductsQuery, 
+  useCreateProduct, 
+  useUpdateProduct, 
+  useDeleteProduct, 
+  useMarkProductAsSold,
+  type ProductFilters
+} from '@/hooks/useProductsQuery';
+import type { Product } from '@/lib/types';
 
-// Otimizado: mais produtos por página = menos queries ao Firestore
-// Número de produtos por página - otimizado para carregamento rápido inicial
-const PRODUCTS_PER_PAGE = 12;
+// ================================================================
+// TIPOS
+// ================================================================
 
 type NewProduct = Omit<Product, 'id' | 'createdAt'>;
 
@@ -23,202 +36,119 @@ interface ProductContextType {
   updateProduct: (updatedProduct: Product) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   markAsSold: (productId: string) => Promise<void>;
-  loadMoreProducts: () => Promise<void>; 
+  loadMoreProducts: () => void; 
+  isFetchingMore: boolean;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
+// ================================================================
+// PROVIDER
+// ================================================================
+
 export function ProductProvider({ children }: { children: ReactNode }) {
-  const searchParams = useSearchParams(); // Obter filtros da URL
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [hasMoreProducts, setHasMoreProducts] = useState(true);
+  const searchParams = useSearchParams();
   
-  // Extrair filtros da URL e preparar as QueryConstraints do Firestore
-  const queryConstraints = useMemo(() => {
-    const constraints: QueryConstraint[] = [];
+  // ================================================================
+  // Extrair filtros da URL
+  // ================================================================
+  const filters: ProductFilters = useMemo(() => {
     const minPrice = Number(searchParams.get("minPrice"));
-    const maxPrice = searchParams.get("maxPrice") === 'Infinity' ? Infinity : Number(searchParams.get("maxPrice"));
-    const categoryQuery = searchParams.get("category");
-    // Nota: Removido 'conditions' e 'brands' do Firestore para evitar erro de múltiplos 'in'.
-    // Estes filtros são aplicados no client-side (product-grid.tsx).
+    const maxPrice = searchParams.get("maxPrice") === 'Infinity' ? undefined : Number(searchParams.get("maxPrice"));
+    const category = searchParams.get("category");
+    const condition = searchParams.get("condition");
+    const brand = searchParams.get("brand");
 
-    // 1. Filtrar por Preço (eficiente no Firestore)
-    if (minPrice > 0) constraints.push(where("price", ">=", minPrice));
-    if (maxPrice && maxPrice < Infinity) constraints.push(where("price", "<=", maxPrice));
-
-    // 2. Filtrar por Categoria (eficiente no Firestore)
-    if (categoryQuery) constraints.push(where("category", "==", categoryQuery));
-    
-    // Filtro de status para mostrar apenas produtos disponíveis (default)
-    constraints.push(where("status", "==", 'disponível')); 
-
-    return constraints;
+    return {
+      category: category || undefined,
+      minPrice: minPrice > 0 ? minPrice : undefined,
+      maxPrice: maxPrice && maxPrice < Infinity ? maxPrice : undefined,
+      condition: condition || undefined,
+      brand: brand || undefined,
+      status: 'disponível', // Apenas produtos disponíveis
+    };
   }, [searchParams]);
 
-  // Determina se existem filtros de preço para ajustar a ordenação (boa prática do Firestore)
-  const hasPriceRange = useMemo(() => {
-    const minPrice = Number(searchParams.get("minPrice"));
-    const maxPrice = searchParams.get("maxPrice") === 'Infinity' ? Infinity : Number(searchParams.get("maxPrice"));
-    return (minPrice > 0) || (!!maxPrice && maxPrice < Infinity);
-  }, [searchParams]);
+  // ================================================================
+  // TanStack Query - Listagem com Paginação Infinita
+  // ================================================================
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useProductsQuery({
+    filters,
+    limitPerPage: 12,
+  });
 
+  // ================================================================
+  // TanStack Query - Mutations (Criar, Atualizar, Apagar)
+  // ================================================================
+  const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
+  const deleteProductMutation = useDeleteProduct();
+  const markAsSoldMutation = useMarkProductAsSold();
 
-  const fetchProducts = useCallback(async (isInitialLoad: boolean, lastDocRef?: QueryDocumentSnapshot<DocumentData> | null) => {
-      console.log('🔍 Iniciando fetchProducts...', { isInitialLoad, hasLastDoc: !!lastDocRef });
-      
-      // 🚀 Tentar carregar do cache primeiro (apenas no carregamento inicial)
-      if (isInitialLoad && !lastDocRef) {
-        const cachedProducts = CacheManager.get<Product[]>(CACHE_CONFIG.PRODUCTS.KEY);
-        if (cachedProducts && cachedProducts.length > 0) {
-          console.log('✅ Produtos carregados do CACHE:', cachedProducts.length);
-          setProducts(cachedProducts);
-          setLoading(false);
-          setHasMoreProducts(cachedProducts.length >= PRODUCTS_PER_PAGE);
-          return;
-        }
-        console.log('📭 Cache vazio ou expirado, buscando do Firebase...');
-      }
-      
-      setLoading(true);
-      try {
-            console.log('🔥 Firebase configurado:', { 
-              hasDB: !!db, 
-              constraints: queryConstraints.length,
-              hasPriceRange 
-            });
-          
-          const productsCollection = collection(db, 'products');
-          
-          // Construir a consulta com base nos filtros da URL e na paginação
-          let q = hasPriceRange
-            ? query(
-                productsCollection,
-                ...queryConstraints,
-                orderBy("price", "asc"),
-                orderBy("createdAt", "desc"),
-                limit(PRODUCTS_PER_PAGE)
-              )
-            : query(
-                productsCollection,
-                ...queryConstraints,
-                orderBy("createdAt", "desc"),
-                limit(PRODUCTS_PER_PAGE)
-              );
-          
-          if (!isInitialLoad && lastDocRef) {
-              q = hasPriceRange
-                ? query(
-                    productsCollection,
-                    ...queryConstraints,
-                    orderBy("price", "asc"),
-                    orderBy("createdAt", "desc"),
-                    startAfter(lastDocRef),
-                    limit(PRODUCTS_PER_PAGE)
-                  )
-                : query(
-                    productsCollection,
-                    ...queryConstraints,
-                    orderBy("createdAt", "desc"),
-                    startAfter(lastDocRef),
-                    limit(PRODUCTS_PER_PAGE)
-                  );
-          }
-          
-          const documentSnapshots = await getDocs(q);
-          console.log('📦 Query executada:', {
-            totalDocs: documentSnapshots.size,
-            empty: documentSnapshots.empty,
-            firstIds: documentSnapshots.docs.slice(0,3).map(d=>d.id)
-          });
-          
-          const fetchedProducts = documentSnapshots.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-          })) as Product[];
-          
-          console.log(`✅ Produtos carregados: ${fetchedProducts.length}`);
-          
-          const newProducts = isInitialLoad ? fetchedProducts : [...products, ...fetchedProducts];
-          setProducts(newProducts);
-          
-          // 💾 Salvar no cache (apenas primeira página)
-          if (isInitialLoad && fetchedProducts.length > 0) {
-            CacheManager.set(
-              CACHE_CONFIG.PRODUCTS.KEY,
-              fetchedProducts,
-              CACHE_CONFIG.PRODUCTS.EXPIRY
-            );
-            console.log('💾 Produtos salvos no cache');
-          }
-          
-          const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-          setLastDoc(lastVisible || null);
-          
-          setHasMoreProducts(documentSnapshots.docs.length === PRODUCTS_PER_PAGE);
+  // ================================================================
+  // Flatten dos produtos paginados
+  // ================================================================
+  const products = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => page.products);
+  }, [data]);
 
-        } catch (error) {
-          console.error('❌ Erro ao buscar produtos:', error);
-      } finally {
-          setLoading(false);
-      }
-  }, [queryConstraints, hasPriceRange]);
-
-
-  // Efeito para recarregar quando os filtros mudam
-  const lastSearchKeyRef = useRef<string>("");
-  useEffect(() => {
-    // Garante que apenas executamos quando os parâmetros realmente mudam (evita duplas do StrictMode)
-    const key = searchParams.toString();
-    if (lastSearchKeyRef.current === key) return;
-    lastSearchKeyRef.current = key;
-    fetchProducts(true, null);
-  }, [fetchProducts, searchParams]);
-
-  // Função de carregar mais (agora usa a função central fetchProducts)
-  const loadMoreProducts = useCallback(() => {
-    if (!lastDoc || !hasMoreProducts) return Promise.resolve();
-    return fetchProducts(false, lastDoc);
-  }, [lastDoc, hasMoreProducts, fetchProducts]);
-
-
-  // CRUD mantido, filtragem local removida. Paginação e filtros apenas via Firestore.
+  // ================================================================
+  // Funções CRUD (wrapper para mutations)
+  // ================================================================
   const addProduct = useCallback(async (product: NewProduct) => {
-    const newDocRef = doc(collection(db, 'products'));
-    await setDoc(newDocRef, {
-      ...product,
-      createdAt: serverTimestamp(),
-    });
-  }, []);
+    await createProductMutation.mutateAsync(product);
+  }, [createProductMutation]);
 
   const updateProduct = useCallback(async (updatedProduct: Product) => {
-    const productRef = doc(db, 'products', updatedProduct.id);
-    const { id, ...updateData } = updatedProduct;
-    await updateDoc(productRef, {
-      ...updateData,
-      updatedAt: serverTimestamp(),
-    });
-  }, []);
+    const { id, ...updates } = updatedProduct;
+    await updateProductMutation.mutateAsync({ productId: id, updates });
+  }, [updateProductMutation]);
 
   const deleteProduct = useCallback(async (productId: string) => {
-    // ... (lógica inalterada)
-  }, []);
-  
-  const markAsSold = useCallback(async (productId: string) => {
-    // ... (lógica inalterada)
-  }, []);
+    await deleteProductMutation.mutateAsync(productId);
+  }, [deleteProductMutation]);
 
+  const markAsSold = useCallback(async (productId: string) => {
+    await markAsSoldMutation.mutateAsync(productId);
+  }, [markAsSoldMutation]);
+
+  const loadMoreProducts = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // ================================================================
+  // Context Value
+  // ================================================================
   const value = useMemo(() => ({
     products,
-    loading,
-    hasMoreProducts,
+    loading: isLoading,
+    hasMoreProducts: hasNextPage || false,
     addProduct,
     updateProduct,
     deleteProduct,
     markAsSold,
     loadMoreProducts,
-  }), [products, loading, hasMoreProducts, addProduct, updateProduct, deleteProduct, markAsSold, loadMoreProducts]);
+    isFetchingMore: isFetchingNextPage,
+  }), [
+    products, 
+    isLoading, 
+    hasNextPage, 
+    addProduct, 
+    updateProduct, 
+    deleteProduct, 
+    markAsSold, 
+    loadMoreProducts,
+    isFetchingNextPage
+  ]);
 
   return (
     <ProductContext.Provider value={value}>

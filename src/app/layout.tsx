@@ -8,6 +8,7 @@ import { ProductProvider } from '@/context/product-context';
 import { Suspense } from 'react';
 import { ClientOnlyFooter } from '@/components/client-only-footer';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { QueryProvider } from '@/components/query-provider';
 
 export const metadata: Metadata = {
   title: 'Rewear — Moda Sustentável em Segunda Mão',
@@ -51,26 +52,28 @@ export default function RootLayout({
         >
           Ir para o conteúdo
         </a>
-        <AuthProvider>
-          <Suspense fallback={<PageFallback />}>
-            <ProductProvider>
-              <CartProvider>
-                <ErrorBoundary>
-                  <div className="flex min-h-screen flex-col">
-                    <ClientOnlyHeader />
-                    <main id="main-content" className="flex-1" role="main">
-                      <Suspense fallback={<PageFallback />}>
-                        {children}
-                      </Suspense>
-                    </main>
-                    <ClientOnlyFooter />
-                  </div>
-                </ErrorBoundary>
-                <Toaster />
-              </CartProvider>
-            </ProductProvider>
-          </Suspense>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <Suspense fallback={<PageFallback />}>
+              <ProductProvider>
+                <CartProvider>
+                  <ErrorBoundary>
+                    <div className="flex min-h-screen flex-col">
+                      <ClientOnlyHeader />
+                      <main id="main-content" className="flex-1" role="main">
+                        <Suspense fallback={<PageFallback />}>
+                          {children}
+                        </Suspense>
+                      </main>
+                      <ClientOnlyFooter />
+                    </div>
+                  </ErrorBoundary>
+                  <Toaster />
+                </CartProvider>
+              </ProductProvider>
+            </Suspense>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );
